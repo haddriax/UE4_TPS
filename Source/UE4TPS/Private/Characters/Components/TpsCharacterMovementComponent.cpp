@@ -210,6 +210,12 @@ void UTpsCharacterMovementComponent::EnableSprint()
 	ForwardMovementResponsivity = SprintForwardMovementResponsivity;
 	RightMovementResponsivity = SprintRightMovementResponsivity;
 	MaxWalkSpeed = SprintSpeed;
+	
+
+	if (OnSprintStart.IsBound())
+	{
+		OnSprintStart.Broadcast();
+	}
 }
 
 void UTpsCharacterMovementComponent::DisableSprint()
@@ -218,6 +224,11 @@ void UTpsCharacterMovementComponent::DisableSprint()
 	ForwardMovementResponsivity = JogForwardMovementResponsivity;
 	RightMovementResponsivity = JogRightMovementResponsivity;
 	MaxWalkSpeed = JogSpeed;
+
+	if (OnSprintStop.IsBound())
+	{
+		OnSprintStop.Broadcast();
+	}
 }
 
 void UTpsCharacterMovementComponent::EnableWalk()

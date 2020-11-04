@@ -81,6 +81,9 @@ void ATpsCharacter::BeginPlay()
 	Mode.SetConsumeCaptureMouseDown(false);
 	PC->SetInputMode(Mode); 
 	WeaponUI->AddToViewport(9999);
+
+	// Subscibe to Sprint Start, so sprinting instantly stop the character from shooting.
+	GetTpsCharacterMovementComponent()->OnSprintStart.AddUObject(this, &ATpsCharacter::EndFire);
 }
 
 void ATpsCharacter::PostInitializeComponents()
@@ -192,7 +195,9 @@ void ATpsCharacter::StartFire()
 {
 	AWeaponBase* const weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
 
-	if (weapon && GetTpsCharacterStatesComponent()->CanFireInCurentState() == true)
+	if (weapon 
+		&& GetTpsCharacterStatesComponent()->CanFireInCurentState() == true
+		&& GetTpsCharacterMovementComponent()->IsSprinting() == false)
 	{
 		TpsCharacterStatesComponent->SetWantsToFire(true);
 	}

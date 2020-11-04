@@ -63,6 +63,7 @@ class UE4TPS_API UTpsCharacterStatesComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
+public:
 
 protected:
 	UPROPERTY(VisibleAnywhere)

@@ -135,11 +135,9 @@ void UWeaponHandlerComponent::RecoverMontageNotifications()
 				EquipWeapon_GrabWeaponTime = Notification.GetNotify()->GetTime();
 			}
 		}
-		check(EquipWeapon_GrabWeaponTime >= 0.0f);
 		Notifies.Empty();
 	}
-
-
+	check(EquipWeapon_GrabWeaponTime >= 0.0f);
 
 	if (UnequipWeaponAM)
 	{
@@ -151,9 +149,9 @@ void UWeaponHandlerComponent::RecoverMontageNotifications()
 				UnequipWeapon_ReleaseWeaponTime = Notification.GetNotify()->GetTime();
 			}
 		}
-		check(UnequipWeapon_ReleaseWeaponTime >= 0.0f);
 		Notifies.Empty();
 	}
+	check(UnequipWeapon_ReleaseWeaponTime >= 0.0f);
 }
 
 bool UWeaponHandlerComponent::EquipWeapon(AWeaponBase* WeaponToEquip)

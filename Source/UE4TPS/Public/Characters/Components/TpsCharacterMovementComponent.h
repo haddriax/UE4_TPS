@@ -76,6 +76,12 @@ class UE4TPS_API UTpsCharacterMovementComponent : public UCharacterMovementCompo
 {
 	GENERATED_BODY()
 
+public:
+	DECLARE_MULTICAST_DELEGATE(FOnSprintStart)
+	FOnSprintStart OnSprintStart;
+
+	DECLARE_MULTICAST_DELEGATE(FOnSprintStop)
+	FOnSprintStop OnSprintStop;
 protected:
 	ATpsCharacter* TpsCharacter = nullptr;
 
