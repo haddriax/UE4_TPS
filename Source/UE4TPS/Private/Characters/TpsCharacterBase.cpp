@@ -10,7 +10,6 @@
 #include "Characters/Components/IK_LegsComponent.h"
 #include "Characters/Components/WeaponHandlerComponent.h"
 #include "Characters/Components/TpsCharacterMovementComponent.h"
-#include "Characters/Components/TpsCharacterStatesComponent.h"
 #include "Weapons/WeaponBase.h"
 
 
@@ -40,7 +39,6 @@ ATpsCharacterBase::ATpsCharacterBase(const FObjectInitializer& ObjectInitializer
 	GetCharacterMovement()->AirControl = 0.2f;
 
 	WeaponHandlerComponent = CreateDefaultSubobject<UWeaponHandlerComponent>(TEXT("WeaponHandlerComponent"));
-	TpsCharacterStatesComponent = CreateDefaultSubobject<UTpsCharacterStatesComponent>(TEXT("TpsCharacterStatesComponent"));
 
 	IK_LegsComponent = CreateDefaultSubobject<UIK_LegsComponent>(TEXT("IK_LegsComponent"));
 
@@ -64,7 +62,6 @@ void ATpsCharacterBase::PostInitializeComponents()
 	TpsCharacterMovementComponent = Cast<UTpsCharacterMovementComponent>(GetCharacterMovement());
 
 	check(TpsCharacterMovementComponent);
-	check(TpsCharacterStatesComponent);
 	check(IK_LegsComponent);
 	check(WeaponHandlerComponent);
 }
@@ -111,11 +108,9 @@ void ATpsCharacterBase::StartFire()
 {
 	AWeaponBase* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
 
-	if (weapon &&
-		GetTpsCharacterStatesComponent()->CanFireInCurentState()
-		&& GetTpsCharacterMovementComponent()->AllowFiring())
+	if (weapon && GetTpsCharacterMovementComponent()->AllowFiring())
 	{
-		TpsCharacterStatesComponent->SetWantsToFire(true);
+		GetWeaponHandlerComponent()->GetEquippedWeapon()->StartFireOrder();
 	}
 }
 
@@ -123,9 +118,9 @@ void ATpsCharacterBase::StopFire()
 {
 	AWeaponBase* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
 
-	if (weapon && GetTpsCharacterStatesComponent()->IsFiring() == true)
+	if (weapon)
 	{
-		TpsCharacterStatesComponent->SetWantsToFire(false);
+		GetWeaponHandlerComponent()->GetEquippedWeapon()->StopFireOrder();
 	}
 }
 

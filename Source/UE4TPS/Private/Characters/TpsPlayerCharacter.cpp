@@ -9,7 +9,6 @@
 
 #include "Characters/Components/WeaponHandlerComponent.h"
 #include "Characters/Components/TpsCharacterMovementComponent.h"
-#include "Characters/Components/TpsCharacterStatesComponent.h"
 #include "UI/WeaponWidget.h"
 
 
@@ -91,8 +90,8 @@ void ATpsPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATpsPlayerCharacter::StartFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATpsPlayerCharacter::StopFire);
 
-	PlayerInputComponent->BindAction("Aim", IE_Pressed, TpsCharacterStatesComponent, &UTpsCharacterStatesComponent::TryAiming);
-	PlayerInputComponent->BindAction("Aim", IE_Released, TpsCharacterStatesComponent, &UTpsCharacterStatesComponent::StopTryingAiming);
+	// PlayerInputComponent->BindAction("Aim", IE_Pressed, TpsCharacterStatesComponent, &UTpsCharacterStatesComponent::TryAiming);
+	// PlayerInputComponent->BindAction("Aim", IE_Released, TpsCharacterStatesComponent, &UTpsCharacterStatesComponent::StopTryingAiming);
 
 	PlayerInputComponent->BindAction("EquipWeapon", IE_Pressed, WeaponHandlerComponent, &UWeaponHandlerComponent::EquipPrimaryWeapon);
 	PlayerInputComponent->BindAction("ReloadWeapon", IE_Pressed, WeaponHandlerComponent, &UWeaponHandlerComponent::Reload);

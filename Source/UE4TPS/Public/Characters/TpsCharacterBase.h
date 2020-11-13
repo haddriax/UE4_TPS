@@ -38,9 +38,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 		UTpsCharacterMovementComponent* TpsCharacterMovementComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient)
-		UTpsCharacterStatesComponent* TpsCharacterStatesComponent = nullptr;
-
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE UWeaponHandlerComponent* GetWeaponHandlerComponent() const { return WeaponHandlerComponent; }
@@ -50,9 +47,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE FName GetHolsterWeaponAttachPointOnCharacter() const { return HolsterWeaponAttachPointOnCharacter_Rifle; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-		FORCEINLINE UTpsCharacterStatesComponent* GetTpsCharacterStatesComponent() const { return TpsCharacterStatesComponent; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE UTpsCharacterMovementComponent* GetTpsCharacterMovementComponent() const { return TpsCharacterMovementComponent; }

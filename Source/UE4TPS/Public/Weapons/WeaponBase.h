@@ -188,7 +188,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 		UWeaponFeedbacksComponent* WeaponFeedbacksComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sockets|IK")
