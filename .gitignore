@@ -72,3 +72,17 @@ Plugins/*/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+/Content/ParagonLtBelica
+/Content
+/Source/FBX
+/Source/UE4_MocapOnline_Tech_Notes.txt
+/Source/UE4VersionCompatiblilityandUsage.pdf
+/Source/SK_Mannequin_T_Pose_README.txt
+/Source/SK_Mannequin_A_Pose_README.txt
+/Source/SKMannequin_T_Pose.zip
+/Source/SKMannequin_A_Pose.zip
+/Source/NEW_MiddleFinger01_WeaponSocket!!!.txt
+/Source/Motionbuilder.zip
+/Source/Maya.rar
+/Source/A POSE OR T POSE  CONVERSION.pdf
+/UE4TPS.uproject
