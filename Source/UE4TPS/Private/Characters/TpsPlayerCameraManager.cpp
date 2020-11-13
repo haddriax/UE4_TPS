@@ -3,7 +3,7 @@
 
 #include "Characters/TpsPlayerCameraManager.h"
 
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsPlayerCharacter.h"
 #include "Characters/Controllers/TpsPlayerController.h"
 
 ATpsPlayerCameraManager::ATpsPlayerCameraManager()

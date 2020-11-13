@@ -7,7 +7,7 @@
 #include "CanvasItem.h"
 #include "UObject/ConstructorHelpers.h"
 
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsPlayerCharacter.h"
 #include "Characters/Components/WeaponHandlerComponent.h"
 #include "Weapons/WeaponBase.h"
 

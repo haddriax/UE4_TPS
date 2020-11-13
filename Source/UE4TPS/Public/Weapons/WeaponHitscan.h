@@ -104,6 +104,7 @@ struct FHitscanHit
 	*/
 	FHitscanShot Shot;
 	FHitResult HitResult;
+	AWeaponHitscan* Instigator;
 
 	FHitscanHit()
 	{

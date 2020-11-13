@@ -3,11 +3,12 @@
 
 #include "Weapons/WeaponHitscan.h"
 
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsCharacterBase.h"
 
 #include "DrawDebugHelpers.h"
 #include "Sound/SoundCue.h"
 #include "Camera/CameraComponent.h"
+#include "Interfaces/HitResponsiveInterface.h"
 // #include "Effects/WeaponImpactEffect.h"
 
 void AWeaponHitscan::DrawDebugTrace(const FVector& Begin, const FVector& End, FColor Color)
@@ -27,13 +28,60 @@ void AWeaponHitscan::DrawDebugTrace(const FVector& Begin, const FVector& End, FC
 
 void AWeaponHitscan::FireWeapon()
 {
+	/*
 	FVector traceStart, traceEnd;
 	FHitscanShot shot = PrepareMuzzleTrace(traceStart, traceEnd, false);
 	FHitscanHit hit = TraceFromMuzzle(shot);
-
 	HandleHit(hit);
+	*/
+
+	const FVector TraceStart = GetMuzzleWorldLocation();
+	const FVector TraceEnd = GetActorRightVector() * HitscanConfigs.MaxRange;
+
+	FCollisionQueryParams ColQueryParams;
+	FCollisionResponseParams ColResParams;
+
+	FHitscanHit hit;
+
+	// Ignore self and the holder for linetrace.
+	ColQueryParams.AddIgnoredActor(this->GetUniqueID());
+	ColQueryParams.AddIgnoredActor(GetParentCharacter()->GetUniqueID());
+
+	// Trace here.
+	bool bIsHit = GetWorld()->LineTraceSingleByChannel(
+		hit.HitResult,
+		TraceStart,
+		TraceEnd, //GetActorLocation() + GetActorForwardVector() * 1000,
+		ECollisionChannel::ECC_MAX, // Context
+		ColQueryParams,
+		ColResParams
+	);
+
+	if (bDrawRay)
+	{
+		if (bIsHit)
+		{
+			DrawDebugTrace(TraceStart, hit.HitResult.ImpactPoint, FColor::Green);
+			DrawDebugTrace(hit.HitResult.ImpactPoint, TraceEnd, FColor::Red);
+		}
+		else
+		{
+			DrawDebugTrace(TraceStart, TraceEnd, FColor::Red);
+		}
+	}
+
+	AActor* actorHit = hit.HitResult.GetActor();
+
+	if (actorHit)
+	{		
+		if (actorHit->GetClass()->ImplementsInterface(UHitResponsiveInterface::StaticClass()))
+		{
+			Cast<IHitResponsiveInterface>(actorHit)->OnHit(this);
+		}	
+	}
 }
 
+/*
 void AWeaponHitscan::PrepareTraceFromCamera(FVector& TraceStart, FVector& TraceEnd)
 {
 	// Get the direction and the location from the Camera.
@@ -61,20 +109,23 @@ FHitResult AWeaponHitscan::TraceFromCamera(FVector& TraceStart, FVector& TraceEn
 		hit,
 		TraceStart,
 		TraceEnd,
-		ECollisionChannel::ECC_Visibility, // Context
+		ECollisionChannel::ECC_MAX, // Context
 		ColQueryParams,
 		ColResParams
 	);
 
+
+#if !(UE_BUILD_SHIPPING)
 	if (bDrawRay)
 	{
 		DrawDebugTrace(TraceStart, TraceEnd, FColor::Black);
 	}
-	
+#endif
+
 	return hit;
 }
 
-FHitscanShot AWeaponHitscan::PrepareMuzzleTrace(FVector& TraceStart, FVector& TraceEnd, bool bIgnoreSpread /* = false */)
+FHitscanShot AWeaponHitscan::PrepareMuzzleTrace(FVector& TraceStart, FVector& TraceEnd, bool bIgnoreSpread)
 {
 	// Get the hit where the player expect to shoot, i.e. from the camera center.
 	PrepareTraceFromCamera(TraceStart, TraceEnd);
@@ -94,7 +145,7 @@ FHitscanShot AWeaponHitscan::PrepareMuzzleTrace(FVector& TraceStart, FVector& Tr
 	if (!bIgnoreSpread)
 	{
 		// Add the spread to the trace direction.
-		shotRandomSeed = AddRandomDirectionFromCone(/*OUT*/ trace_direction, CurrentSpread, CurrentSpread, false);
+		shotRandomSeed = AddRandomDirectionFromCone(trace_direction, CurrentSpread, CurrentSpread, false);
 	}
 
 	// Hydrate the Shot struct.
@@ -126,7 +177,7 @@ const FHitscanHit AWeaponHitscan::TraceFromMuzzle(FHitscanShot Shot)
 		hit.HitResult,
 		Shot.OriginLocation,
 		Shot.EndLocation,
-		ECollisionChannel::ECC_Visibility, // Context
+		ECollisionChannel::ECC_MAX, // Context
 		ColQueryParams,
 		ColResParams
 	);
@@ -149,13 +200,11 @@ const FHitscanHit AWeaponHitscan::TraceFromMuzzle(FHitscanShot Shot)
 
 void AWeaponHitscan::HandleHit(const FHitscanHit& HitDatas)
 {
-	if (HitDatas.HitResult.bBlockingHit == true)
-	{
-		AActor* actorHit = HitDatas.HitResult.GetActor();
+	AActor* actorHit = HitDatas.HitResult.GetActor();
 
-		if (actorHit)
-		{
-			// Do Something ...
-		}
+	if (actorHit && actorHit->GetClass()->ImplementsInterface(UHitResponsiveInterface::StaticClass()))
+	{
+		Cast<IHitResponsiveInterface>(actorHit)->OnHit(this);
 	}
 }
+*/

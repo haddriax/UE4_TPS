@@ -6,8 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "IK_LegsComponent.generated.h"
 
-class ATpsCharacter;
-
+class ATpsCharacterBase;
 
 USTRUCT()
 struct FIKFootDatas
@@ -115,7 +114,7 @@ protected:
 	FVector RightFootEffectorLocation;
 	FVector LeftFootEffectorLocation;
 
-	ATpsCharacter* Character = nullptr;
+	ATpsCharacterBase* Character = nullptr;
 
 public:
 	// Sets default values for this component's properties

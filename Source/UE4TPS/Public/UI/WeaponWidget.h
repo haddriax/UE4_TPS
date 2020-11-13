@@ -6,6 +6,12 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponWidget.generated.h"
 
+class ATpsCharacterBase;
+class AWeaponBase;
+
+class UTextBlock;
+class UImage;
+
 /**
  *
  */
@@ -16,20 +22,20 @@ class UE4TPS_API UWeaponWidget : public UUserWidget
 
 protected:
 
-	class ATpsCharacter* Character = nullptr;
-	class AWeaponBase* DisplayedWeapon = nullptr;
+	ATpsCharacterBase* Character = nullptr;
+	AWeaponBase* DisplayedWeapon = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		class UTextBlock* WeaponNameText;
+		UTextBlock* WeaponNameText;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		class UTextBlock* AmmunitionsReserveText;
+		UTextBlock* AmmunitionsReserveText;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		class UTextBlock* AmmunitionsInClipText;
+		UTextBlock* AmmunitionsInClipText;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
-		class UImage* OptionalImage;
+		UImage* OptionalImage;
 
 protected:
 	/*

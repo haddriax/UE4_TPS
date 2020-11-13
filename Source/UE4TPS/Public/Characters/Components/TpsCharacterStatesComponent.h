@@ -7,7 +7,7 @@
 #include "TpsCharacterStatesComponent.generated.h"
 
 
-class ATpsCharacter;
+class ATpsCharacterBase;
 
 USTRUCT(BlueprintType)
 struct FCharacterState
@@ -67,7 +67,7 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-		ATpsCharacter* Character = nullptr;
+		ATpsCharacterBase* Character = nullptr;
 
 	FCharacterState CharacterState;
 

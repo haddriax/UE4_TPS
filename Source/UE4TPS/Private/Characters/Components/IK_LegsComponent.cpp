@@ -6,7 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
 
-#include "UE4TPS/Public/Characters/TpsCharacter.h"
+#include "Characters/TpsCharacterBase.h"
 
 // Sets default values for this component's properties
 UIK_LegsComponent::UIK_LegsComponent()
@@ -40,7 +40,7 @@ void UIK_LegsComponent::BeginPlay()
 
 bool UIK_LegsComponent::CheckOwnerValid()
 {
-	Character = Cast<ATpsCharacter>(GetOwner());
+	Character = Cast<ATpsCharacterBase>(GetOwner());
 
 	if (!IsValid(Character))
 	{
@@ -52,7 +52,7 @@ bool UIK_LegsComponent::CheckOwnerValid()
 
 bool UIK_LegsComponent::CheckSocketsValid()
 {
-	USkeletalMeshComponent const* const UseMesh = Character->GetMesh();
+	const USkeletalMeshComponent*  UseMesh = Character->GetMesh();
 
 	bool Valid = UseMesh->DoesSocketExist(LeftFootSocketName)
 		&& UseMesh->DoesSocketExist(RightFootSocketName)
@@ -69,10 +69,10 @@ bool UIK_LegsComponent::CheckSocketsValid()
 
 bool UIK_LegsComponent::TraceFromFootAndHydrateDatas(FIKFootDatas& IKFootDatas)
 {
-	USkeletalMeshComponent const* CharacterMesh = Character->GetMesh();
+	const USkeletalMeshComponent* CharacterMesh = Character->GetMesh();
 
-	FVector const CharacterWorldLocation = Character->GetActorLocation();
-	FVector const BoneWorldLocation = CharacterMesh->GetBoneLocation(
+	const FVector CharacterWorldLocation = Character->GetActorLocation();
+	const FVector BoneWorldLocation = CharacterMesh->GetBoneLocation(
 		IKFootDatas.bIsRightFoot ? RightFootSocketName : LeftFootSocketName,
 		EBoneSpaces::WorldSpace
 	);
@@ -80,8 +80,8 @@ bool UIK_LegsComponent::TraceFromFootAndHydrateDatas(FIKFootDatas& IKFootDatas)
 	FVector TraceStart(BoneWorldLocation.X, BoneWorldLocation.Y, CharacterWorldLocation.Z);
 	TraceStart = Character->GetMesh()->GetComponentTransform().InverseTransformPosition(TraceStart);
 
-	float const EndZ = Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + TraceRangeBelowCapsule;
-	FVector const TraceEnd(BoneWorldLocation.X, BoneWorldLocation.Y, (CharacterWorldLocation.Z - EndZ));
+	const float EndZ = Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + TraceRangeBelowCapsule;
+	const FVector TraceEnd(BoneWorldLocation.X, BoneWorldLocation.Y, (CharacterWorldLocation.Z - EndZ));
 
 	FHitResult Hit;
 
@@ -107,16 +107,16 @@ bool UIK_LegsComponent::TraceFromFootAndHydrateDatas(FIKFootDatas& IKFootDatas)
 
 float UIK_LegsComponent::IKTraceFromFoot(FName const& BoneName, /* OUT */ FVector& OutNormal)
 {
-	USkeletalMeshComponent const* const UseMesh = Character->GetMesh();
+	const USkeletalMeshComponent* UseMesh = Character->GetMesh();
 
-	FVector const CharacterWorldLocation = Character->GetActorLocation();
-	FVector const BoneWorldLocation = UseMesh->GetBoneLocation(BoneName, EBoneSpaces::WorldSpace);
+	const FVector CharacterWorldLocation = Character->GetActorLocation();
+	const FVector BoneWorldLocation = UseMesh->GetBoneLocation(BoneName, EBoneSpaces::WorldSpace);
 
-	FVector const TraceStart(BoneWorldLocation.X, BoneWorldLocation.Y, CharacterWorldLocation.Z);
+	const FVector TraceStart(BoneWorldLocation.X, BoneWorldLocation.Y, CharacterWorldLocation.Z);
 
-	float const EndZ = Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + TraceRangeBelowCapsule;
+	const float EndZ = Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + TraceRangeBelowCapsule;
 
-	FVector const TraceEnd(BoneWorldLocation.X, BoneWorldLocation.Y, (CharacterWorldLocation.Z - EndZ));
+	const FVector TraceEnd(BoneWorldLocation.X, BoneWorldLocation.Y, (CharacterWorldLocation.Z - EndZ));
 
 	FCollisionQueryParams CQP;
 	CQP.AddIgnoredActor(Character->GetUniqueID());
@@ -185,12 +185,12 @@ FRotator UIK_LegsComponent::ComputeRotationOffset(FRotator const& CurrentRotatio
 		return FRotator::ZeroRotator;
 
 	// Compute the "Right" vector of this rotation.	
-	FVector const YVector = FVector::CrossProduct(GroundNormal, Character->GetActorForwardVector());
+	const FVector YVector = FVector::CrossProduct(GroundNormal, Character->GetActorForwardVector());
 
-	FQuat const FootQuat = FRotationMatrix::MakeFromXZ(-YVector, GroundNormal).ToQuat();
+	const FQuat FootQuat = FRotationMatrix::MakeFromXZ(-YVector, GroundNormal).ToQuat();
 
 	// Transform the Rotation from World space to Mesh space so it can be used in the AnimBP.
-	FRotator const FootRotator = Character->GetMesh()->GetComponentTransform().InverseTransformRotation(FootQuat).Rotator();
+	const FRotator FootRotator = Character->GetMesh()->GetComponentTransform().InverseTransformRotation(FootQuat).Rotator();
 
 	return FootRotator;
 }

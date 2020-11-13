@@ -7,7 +7,7 @@
 
 #include "TpsCharacterMovementComponent.generated.h"
 
-class ATpsCharacter;
+class ATpsCharacterBase;
 class AWeaponBase;
 
 UENUM(BlueprintType)
@@ -65,9 +65,6 @@ struct FMovementConfig
 	}
 };
 
-
-
-
 /**
  *
  */
@@ -82,8 +79,10 @@ public:
 
 	DECLARE_MULTICAST_DELEGATE(FOnSprintStop)
 	FOnSprintStop OnSprintStop;
+
+
 protected:
-	ATpsCharacter* TpsCharacter = nullptr;
+	ATpsCharacterBase* TpsCharacter = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 		ECharacterGlobalMovementMode MovementType;
@@ -97,7 +96,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 		FMovementConfig RunConfig;
 
-	FMovementConfig ActiveConfig;
+	FMovementConfig* ActiveConfig;
 
 	ECharacterStance LoadedCharacterStance;
 	ECharacterStance InputCharacterStance;
@@ -170,6 +169,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE float GetRightMovementResponsivity() const { return RightMovementResponsivity; }
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE bool AllowFiring() const { return LoadedCharacterStance != ECharacterStance::Run; }
+
 	void SetWeaponIsInHand(bool WeaponInHand) { bWeaponIsInHand = WeaponInHand; }
 
 protected:
@@ -197,6 +199,8 @@ protected:
 
 public:
 	virtual void BeginPlay() override;
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/*
 	* Add a Forward/Backward input to the owning pawn, scaled by the actual Movement Type.

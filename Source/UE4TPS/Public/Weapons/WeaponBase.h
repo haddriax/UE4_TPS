@@ -15,7 +15,7 @@ class UAudioComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
 class USkeletalMeshComponent;
-class ATpsCharacter;
+class ATpsCharacterBase;
 
 class UWeaponFeedbacksComponent;
 
@@ -182,14 +182,14 @@ private:
 	/*
 	* The Character which got this Weapon attach to.
 	*/
-	ATpsCharacter* ParentCharacter = nullptr;
+	ATpsCharacterBase* ParentCharacter = nullptr;
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-		UWeaponFeedbacksComponent* WeaponFeedbacksComponent = nullptr;
+		UWeaponFeedbacksComponent* WeaponFeedbacksComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		USkeletalMeshComponent* WeaponMesh = nullptr;
+	UPROPERTY(VisibleAnywhere)
+		USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sockets|IK")
 		FName WeaponRightHandSocketName = "socket_hand_right";
@@ -202,6 +202,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sockets")
 		FName MuzzleTrace_SocketName = "MuzzleSocket";
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sockets")
+		FName MuzzleDirection_SocketName = "MuzzleDirectionSocket";
 
 	bool bIsEquipped = false;
 	bool bPendingEquip = false;
@@ -263,6 +266,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE FName GetWeaponLeftHandSocketName() const { return WeaponLeftHandSocketName; }
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE FName GetShotDirectionSocketName() const { return WeaponLeftHandSocketName; }
+
 	/*
 	* Return the type of slot this weapon is using to be holstered.
 	*/
@@ -294,12 +300,12 @@ protected:
 	* Attach the weapon to the owning player hand, and snap it to the weapon socket.
 	*/
 	UFUNCTION()
-	void AttachToPawnHand(ATpsCharacter* Character);
+	void AttachToPawnHand(ATpsCharacterBase* Character);
 
 	/*
 	* Attach the weapon to the owning player dedicated holster slot.
 	*/
-	void AttachToPawnHoslterSlot(ATpsCharacter* Character);
+	void AttachToPawnHoslterSlot(ATpsCharacterBase* Character);
 
 	UFUNCTION()
 	/*
@@ -354,7 +360,7 @@ protected:
 public:
 	const FName GetMuzzleAttachPoint() const;
 
-	void SetPlayer(class ATpsCharacter* _Player);
+	void SetPlayer(class ATpsCharacterBase* _Player);
 
 	/*
 	* Set a new state and call the needed methods when switching states.
@@ -392,13 +398,16 @@ public:
 		float GetRateOfFire() const { return WeaponDatas.RateOfFire; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		ATpsCharacter* GetParentCharacter() const { return ParentCharacter; }
+		ATpsCharacterBase* GetParentCharacter() const { return ParentCharacter; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
 		USkeletalMeshComponent* GetMesh() const { return WeaponMesh; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
 		FVector GetMuzzleWorldLocation() const;
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
+		FVector GetShotWorldDirection() const;
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
 		EWeaponType GetWeaponType() const { return  WeaponDatas.WeaponType; }
@@ -432,7 +441,7 @@ public:
 	* Take this weapon in hand.
 	* @return True - Equip can be executed.
 	*/
-	bool EquipOn(ATpsCharacter* Character);
+	bool EquipOn(ATpsCharacterBase* Character);
 
 	/*
 	* Called once full equip animation is finished by WeaponHandlerComponent.

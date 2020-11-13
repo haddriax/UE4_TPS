@@ -8,7 +8,7 @@
 // #include "Engine/StreamableManager.h"
 
 #include "Characters/Controllers/TpsPlayerController.h"
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsCharacterBase.h"
 #include "Weapons/WeaponBase.h"
 
 // Sets default values for this component's properties
@@ -63,7 +63,7 @@ void UWeaponHandlerComponent::PrepareStartingWeapons()
 			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
 			);
 
-		WeaponWithDeferredSpawn->SetPlayer(Cast<ATpsCharacter>(GetOwner()));
+		WeaponWithDeferredSpawn->SetPlayer(Cast<ATpsCharacterBase>(GetOwner()));
 
 		PrimaryWeapon = WeaponWithDeferredSpawn;
 
@@ -82,7 +82,7 @@ void UWeaponHandlerComponent::PrepareStartingWeapons()
 			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
 			);
 
-		WeaponWithDeferredSpawn->SetPlayer(Cast<ATpsCharacter>(GetOwner()));
+		WeaponWithDeferredSpawn->SetPlayer(Cast<ATpsCharacterBase>(GetOwner()));
 
 		SecondaryWeapon = WeaponWithDeferredSpawn;
 		WeaponWithDeferredSpawn->FinishSpawning(FTransform::Identity);
@@ -96,7 +96,7 @@ void UWeaponHandlerComponent::BeginPlay()
 
 	LoadAnimationMontages();
 
-	CharacterMesh = Cast<ACharacter>(GetOwner())->GetMesh();
+	CharacterMesh = Cast<ATpsCharacterBase>(GetOwner())->GetMesh();
 
 	PrepareStartingWeapons();
 }
@@ -180,7 +180,7 @@ bool UWeaponHandlerComponent::EquipWeapon(AWeaponBase* WeaponToEquip)
 	// Unequip currently held weapon.
 	UnequipWeapon();
 
-	ATpsCharacter* Owner = Cast<ATpsCharacter>(GetOwner());
+	ATpsCharacterBase* Owner = Cast<ATpsCharacterBase>(GetOwner());
 	Owner->PlayAnimMontage(EquipWeaponAM);
 
 	WeaponToEquip->EquipOn(Owner);
@@ -219,7 +219,7 @@ bool UWeaponHandlerComponent::EquipWeapon(AWeaponBase* WeaponToEquip)
 void UWeaponHandlerComponent::AttachToPawnHand(AWeaponBase* Weapon)
 {
 	// Attach the weapon to the player socket.
-	ATpsCharacter* Owner = Cast<ATpsCharacter>(GetOwner());
+	ATpsCharacterBase* Owner = Cast<ATpsCharacterBase>(GetOwner());
 
 	FAttachmentTransformRules attachmentTransformRules(
 		EAttachmentRule::SnapToTarget,
@@ -235,7 +235,7 @@ void UWeaponHandlerComponent::AttachToPawnHoslterSlot(AWeaponBase* Weapon)
 {
 	bool AttachSucceed = false;
 
-	ATpsCharacter* Owner = Cast<ATpsCharacter>(GetOwner());
+	ATpsCharacterBase* Owner = Cast<ATpsCharacterBase>(GetOwner());
 
 	switch (Weapon->GetWeaponSlot())
 	{
@@ -352,7 +352,7 @@ void UWeaponHandlerComponent::UnequipWeapon()
 		GetOwner()->GetWorldTimerManager().SetTimer(TimerHandle, TimerDel, UnequipWeapon_ReleaseWeaponTime, false);
 
 
-		ATpsCharacter* Owner = Cast<ATpsCharacter>(GetOwner());
+		ATpsCharacterBase* Owner = Cast<ATpsCharacterBase>(GetOwner());
 		Owner->PlayAnimMontage(UnequipWeaponAM);
 
 		UE_LOG(LogTemp, Display, TEXT("V %s - Unequipping weapon %s"), TEXT(__FUNCTION__), *EquippedWeapon->GetHumanReadableName());
@@ -417,7 +417,7 @@ void UWeaponHandlerComponent::Reload()
 		{
 
 			// Play the reload animation on the owner.
-			ATpsCharacter* Owner = Cast<ATpsCharacter>(GetOwner());
+			ATpsCharacterBase* Owner = Cast<ATpsCharacterBase>(GetOwner());
 			float AnimDuration = Owner->PlayAnimMontage(ReloadWeaponAM);
 
 			// Reload base on the anim duration.

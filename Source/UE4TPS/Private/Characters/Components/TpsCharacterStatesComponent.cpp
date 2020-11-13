@@ -2,7 +2,7 @@
 
 #include "Characters/Components/TpsCharacterStatesComponent.h"
 
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsCharacterBase.h"
 #include "Characters/Components/TpsCharacterMovementComponent.h"
 #include "Characters/Components/WeaponHandlerComponent.h"
 #include "Weapons/WeaponBase.h"
@@ -71,7 +71,7 @@ void UTpsCharacterStatesComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Character = Cast<ATpsCharacter>(GetOwner());
+	Character = Cast<ATpsCharacterBase>(GetOwner());
 
 	check(Character);
 

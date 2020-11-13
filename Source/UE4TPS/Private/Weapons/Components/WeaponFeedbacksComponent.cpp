@@ -9,7 +9,7 @@
 #include "Sound/SoundCue.h"
 
 #include "Weapons/WeaponBase.h"
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsCharacterBase.h"
 
 // Sets default values for this component's properties
 UWeaponFeedbacksComponent::UWeaponFeedbacksComponent()

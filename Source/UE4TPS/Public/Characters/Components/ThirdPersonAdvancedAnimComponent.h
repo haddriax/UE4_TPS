@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "ThirdPersonAdvancedAnimComponent.generated.h"
 
+class ACharacter;
+
 USTRUCT()
 struct FMotionKey
 {
@@ -47,7 +49,7 @@ class UE4TPS_API UThirdPersonAdvancedAnimComponent : public UActorComponent
 	GENERATED_BODY()
 
 protected:
-	class ACharacter* Character;
+	ACharacter* Character;
 
 	UPROPERTY(VisibleAnywhere, Category = "Motion Keys")
 		TArray<FMotionKey> MotionKeys;

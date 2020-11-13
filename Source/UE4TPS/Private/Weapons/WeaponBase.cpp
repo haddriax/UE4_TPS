@@ -5,7 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
 
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsCharacterBase.h"
 #include "Weapons/Components/WeaponFeedbacksComponent.h"
 
 AWeaponBase::AWeaponBase()
@@ -16,6 +16,7 @@ AWeaponBase::AWeaponBase()
 	WeaponMesh->SetCollisionObjectType(ECC_WorldDynamic);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+		
 	SetRootComponent(WeaponMesh);
 
 	WeaponFeedbacksComponent = CreateDefaultSubobject<UWeaponFeedbacksComponent>("WeaponFeedbacks");
@@ -77,7 +78,7 @@ void AWeaponBase::DetermineWeaponState()
 	SetWeaponState(State);
 }
 
-void AWeaponBase::AttachToPawnHand(ATpsCharacter* Character)
+void AWeaponBase::AttachToPawnHand(ATpsCharacterBase* Character)
 {
 	// Attach the weapon to the player socket.
 	if (Character)
@@ -96,7 +97,7 @@ void AWeaponBase::AttachToPawnHand(ATpsCharacter* Character)
 	}
 }
 
-void AWeaponBase::AttachToPawnHoslterSlot(ATpsCharacter* Character)
+void AWeaponBase::AttachToPawnHoslterSlot(ATpsCharacterBase* Character)
 {
 	bool AttachSucceed = false;
 
@@ -246,7 +247,7 @@ const FName AWeaponBase::GetMuzzleAttachPoint() const
 	return MuzzleFX_SocketName;
 }
 
-void AWeaponBase::SetPlayer(ATpsCharacter* _Player)
+void AWeaponBase::SetPlayer(ATpsCharacterBase* _Player)
 {
 	ParentCharacter = _Player;
 }
@@ -283,7 +284,11 @@ void AWeaponBase::SetWeaponState(EWeaponState NewState)
 FVector AWeaponBase::GetMuzzleWorldLocation() const
 {
 	return GetMesh()->GetSocketLocation(GetMuzzleAttachPoint());
-	return GetActorLocation() + GetMesh()->GetSocketLocation(GetMuzzleAttachPoint());
+}
+
+FVector AWeaponBase::GetShotWorldDirection() const
+{
+	return GetMesh()->GetSocketLocation(GetShotDirectionSocketName()) - GetMesh()->GetSocketLocation(GetMuzzleAttachPoint());
 }
 
 void AWeaponBase::StartFireOrder()
@@ -328,7 +333,7 @@ bool AWeaponBase::CanSwitchWeapon() const
 	return (CurrentState == EWeaponState::Idle);
 }
 
-bool AWeaponBase::EquipOn(ATpsCharacter* _Character)
+bool AWeaponBase::EquipOn(ATpsCharacterBase* _Character)
 {
 	if (bPendingEquip)
 	{

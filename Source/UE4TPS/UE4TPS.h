@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/GameModeBase.h"
 
-#include "Characters/TpsCharacter.h"
+#include "Characters/TpsCharacterBase.h"
 #include "Characters/Controllers/TpsPlayerController.h"
 #include "Characters/Components/WeaponHandlerComponent.h"
 #include "Weapons/WeaponBase.h"

@@ -145,7 +145,6 @@ protected:
 	bool bUseHandIK = false;
 
 public:
-
 	// Sets default values for this component's properties.
 	UWeaponHandlerComponent();
 
@@ -176,14 +175,14 @@ public:
 		bool IsSecondaryEquipped() const;
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
-	FORCEINLINE bool ShouldUseHandIK() const { return bUseHandIK;  };
-private:
+		FORCEINLINE bool ShouldUseHandIK() const { return bUseHandIK;  };
+
+protected:
 	/*
 	* Instantiate the Starting Weapons and put them in the inventory.
 	*/
 	void PrepareStartingWeapons();
 
-protected:
 	// Called when the game starts.
 	virtual void BeginPlay() override;
 
