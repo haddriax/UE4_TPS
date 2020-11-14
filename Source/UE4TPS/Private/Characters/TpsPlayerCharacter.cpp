@@ -24,6 +24,8 @@ ATpsPlayerCharacter::ATpsPlayerCharacter(const FObjectInitializer& ObjectInitial
 	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
+	bUseControllerRotationYaw = false;
+
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -37,22 +39,40 @@ void ATpsPlayerCharacter::BeginPlay()
 	APlayerController* PC = Cast<APlayerController>(GetController());
 
 	check(PC);
-
 	// Create and add the weapon widget.
-	WeaponUI = CreateWidget<UWeaponWidget>(PC, UWeaponWidget::StaticClass());
-	
+	WeaponUI = CreateWidget<UWeaponWidget>(PC, WeaponUIClass);
 	if (WeaponUI)
 	{
 		FInputModeGameOnly Mode;
 		Mode.SetConsumeCaptureMouseDown(false);
 		PC->SetInputMode(Mode);
-		WeaponUI->AddToViewport(9999);
+		WeaponUI->AddToViewport(32);
 	}
+
+	ToggleLockCamera();
 }
 
 void ATpsPlayerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+}
+
+void ATpsPlayerCharacter::AddControllerYawInput(float Val)
+{
+	if (Val != 0.f && Controller && Controller->IsLocalPlayerController())
+	{
+		APlayerController* const PC = CastChecked<APlayerController>(Controller);
+		PC->AddYawInput(Val);
+	}
+}
+
+void ATpsPlayerCharacter::AddControllerPitchInput(float Val)
+{
+	if (Val != 0.f && Controller && Controller->IsLocalPlayerController())
+	{
+		APlayerController* const PC = CastChecked<APlayerController>(Controller);
+		PC->AddPitchInput(Val);
+	}
 }
 
 void ATpsPlayerCharacter::TurnAtRate(float Rate)
@@ -103,9 +123,9 @@ void ATpsPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAxis("MoveForward", TpsCharacterMovementComponent, &UTpsCharacterMovementComponent::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", TpsCharacterMovementComponent, &UTpsCharacterMovementComponent::MoveRight);
 
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("Turn", this, &ATpsPlayerCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &ATpsPlayerCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &ATpsPlayerCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ATpsPlayerCharacter::LookUpAtRate);
 }
 

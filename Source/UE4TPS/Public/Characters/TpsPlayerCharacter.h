@@ -28,8 +28,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* FollowCamera;
 
-	UPROPERTY(VisibleInstanceOnly)
-		UWeaponWidget* WeaponUI = nullptr;
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<UWeaponWidget> WeaponUIClass;
+
+	UWeaponWidget* WeaponUI = nullptr;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -54,6 +56,10 @@ protected:
 
 	virtual void PostInitializeComponents() override;
 
+	void AddControllerYawInput(float Val) override;
+
+	void AddControllerPitchInput(float Val) override;
+
 	/**
 	* Called via input to turn at a given rate.
 	* @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
@@ -72,12 +78,12 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+
 	/*
 	* Lock/Unlock the camera to the Character orientation.
 	*/
 	void ToggleLockCamera();
-	
+
 	/** Begin implementation : HitResponsive Interface */
 	// void OnHit(const AWeaponBase* HitInstigator) override;
 	/* End HitResponsive Interface */

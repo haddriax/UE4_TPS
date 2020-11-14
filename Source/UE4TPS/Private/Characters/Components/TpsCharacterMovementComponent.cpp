@@ -3,6 +3,8 @@
 
 #include "Characters/Components/TpsCharacterMovementComponent.h"
 
+#include "DrawDebugHelpers.h"
+
 #include "Characters/TpsCharacterBase.h"
 #include "Characters/Components/WeaponHandlerComponent.h"
 
@@ -109,7 +111,7 @@ void UTpsCharacterMovementComponent::SubscribeToWeaponHandlerComponent()
 	// TpsCharacter->GetWeaponHandlerComponent()->OnUnequipWeapon.AddUniqueDynamic(this, &UTpsCharacterMovementComponent::OnWeaponUnequipped);
 }
 
-void UTpsCharacterMovementComponent::ApplyMovementConfigs(FMovementConfig const& MovementConfigs)
+void UTpsCharacterMovementComponent::ApplyMovementConfigs(const FMovementConfig& MovementConfigs)
 {
 	ForwardMovementResponsivity = MovementConfigs.ForwardMovementResponsivity;
 	RightMovementResponsivity = MovementConfigs.ForwardMovementResponsivity;
@@ -129,43 +131,93 @@ void UTpsCharacterMovementComponent::BeginPlay()
 void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	/*
+	// Draw velocity
+	DrawDebugLine(
+		GetWorld(),
+		GetActorLocation(),
+		GetActorLocation() + Velocity.GetSafeNormal() * 100,
+		FColor::Yellow,
+		false,
+		0.0f,
+		'\000',
+		1.0f
+	);
+
+	const AController* Controller = CharacterOwner->GetController();
+	if ((Controller && (InputDirection != FVector::ZeroVector)))
+	{
+		const FVector TargetedDirection = TpsCharacter->GetActorTransform().TransformVector(InputDirection.GetSafeNormal());
+		const FVector ActualDirection = Acceleration.GetSafeNormal();
+
+		const FVector FinalMovement = FMath::VInterpTo(ActualDirection, TargetedDirection, DeltaTime, 10.0f);
+		
+
+		// Draw input direction.
+		DrawDebugLine(
+			GetWorld(),
+			GetActorLocation(),
+			GetActorLocation() + TargetedDirection * 100,
+			FColor::Green,
+			false,
+			0.0f,
+			'\000',
+			2.0f
+		);
+
+		// Draw input FinalMovement.
+		DrawDebugLine(
+			GetWorld(),
+			GetActorLocation(),
+			GetActorLocation() + FinalMovement * 100,
+			FColor::Red,
+			false,
+			0.0f,
+			'\000',
+			2.0f
+		);
+
+		AddInputVector(FinalMovement, false);
+	}
+	*/
 }
 
 void UTpsCharacterMovementComponent::MoveForward(float InputValue)
 {
-	AController const* const Controller = CharacterOwner->GetController();
+	InputDirection.X = InputValue;
+	
+	const AController*  Controller = CharacterOwner->GetController();
 	if ((Controller && (InputValue != 0.0f)))
 	{
-		// Find out which way is forward.
-		FRotator const Rotation = Controller->GetControlRotation();
-		FRotator const YawRotation(0, Rotation.Yaw, 0);
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// Get forward vector.
-		FVector const WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-		AddInputVector(WorldDirection * InputValue * GetForwardMovementResponsivity(), false);
+		AddInputVector(WorldDirection * InputValue, false);
 	}
 }
 
 void UTpsCharacterMovementComponent::MoveRight(float InputValue)
 {
-	AController const* const Controller = CharacterOwner->GetController();
+	InputDirection.Y = InputValue;
+	
+	const AController* Controller = CharacterOwner->GetController();
 	if ((Controller && (InputValue != 0.0f)))
 	{
-		// Find out which way is right.
-		FRotator const Rotation = Controller->GetControlRotation();
-		FRotator const YawRotation(0, Rotation.Yaw, 0);
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// Get right vector.
-		FVector const WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		AddInputVector(WorldDirection * InputValue * GetRightMovementResponsivity(), false);
+		AddInputVector(WorldDirection * InputValue, false);
 	}
 }
 
 ECharacterStance UTpsCharacterMovementComponent::LoadMovementConfigs(ECharacterStance NewMovementConfig)
 {
-	ECharacterStance const OldStance = LoadedCharacterStance;
+	const ECharacterStance OldStance = LoadedCharacterStance;
 
 	switch (NewMovementConfig)
 	{

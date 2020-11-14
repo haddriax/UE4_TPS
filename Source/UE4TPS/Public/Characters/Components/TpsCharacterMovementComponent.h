@@ -151,6 +151,8 @@ protected:
 	*/
 	float RightMovementResponsivity = 1.0f;
 
+	FVector InputDirection;
+
 public:
 	UTpsCharacterMovementComponent();
 
@@ -171,6 +173,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE bool AllowFiring() const { return LoadedCharacterStance != ECharacterStance::Run; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE bool IsMovingLeft() const { return InputDirection.Y < 0.f; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE bool IsMovingRight() const { return InputDirection.Y > 0.f; }
 
 	void SetWeaponIsInHand(bool WeaponInHand) { bWeaponIsInHand = WeaponInHand; }
 
@@ -195,7 +203,7 @@ protected:
 	/*
 	* Apply the config.
 	*/
-	void ApplyMovementConfigs(FMovementConfig const& MovementConfigs);
+	void ApplyMovementConfigs(const FMovementConfig& MovementConfigs);
 
 public:
 	virtual void BeginPlay() override;

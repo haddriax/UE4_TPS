@@ -177,6 +177,9 @@ public:
 	DECLARE_DELEGATE(FOnFireStart);
 	FOnFireStart OnFireStart;
 
+	DECLARE_DELEGATE(FOnShot);
+	FOnShot OnShot;
+
 private:
 
 	/*
@@ -280,6 +283,9 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE EWeaponState GetWeaponState() const { return CurrentState; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE float GetDamage() const { return WeaponDatas.Damage; }
 
 	AWeaponBase();
 

@@ -195,6 +195,9 @@ protected:
 	*/
 	void LoadAnimationMontages();
 
+	UFUNCTION()
+		void PlayShotMontage();
+
 	/*
 	* Get the timestamps of the notification presents in the AnimMontages.
 	*/

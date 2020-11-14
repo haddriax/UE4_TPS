@@ -51,6 +51,8 @@ void ATpsCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Stats.Health = Stats.MaxHealth;
+
 	// Subscibe to Sprint Start, so sprinting instantly stop the character from shooting.
 	GetTpsCharacterMovementComponent()->OnSprintStart.AddUObject(this, &ATpsCharacterBase::StopFire);
 }
@@ -98,7 +100,18 @@ void ATpsCharacterBase::StopAnimMontage(UAnimMontage* AnimMontage)
 
 void ATpsCharacterBase::OnHit(const AWeaponBase* HitInstigator)
 {
-	check(HitInstigator)
+	check(HitInstigator);
+
+	Stats.Health -= HitInstigator->GetDamage();
+
+	if (Stats.Health <= 0)
+	{
+		Die();
+	}
+	else
+	{
+		PlayAnimMontage(AM_HitFront);
+	}
 
 	UE_LOG(LogTemp, Display, TEXT("V %s - Got hit by %s"), TEXT(__FUNCTION__), *HitInstigator->GetHumanReadableName());
 }
@@ -151,4 +164,46 @@ void ATpsCharacterBase::EnterCombatMode()
 
 void ATpsCharacterBase::EnterRelaxMode()
 {
+}
+
+
+void ATpsCharacterBase::Die()
+{
+	EnableRagdoll();
+
+	/*
+	const float TriggerRagdollTime = AM_DieFront->SequenceLength - 0.5f;
+
+	GetMesh()->bBlendPhysics = true;
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle,
+		this,
+		&ATpsCharacterBase::EnableRagdoll,
+		FMath::Max(0.1f, TriggerRagdollTime),
+		false);
+	*/
+}
+
+void ATpsCharacterBase::EnableRagdoll()
+{
+	check(GetMesh());
+	check(GetMesh()->GetPhysicsAsset());
+
+	GetMesh()->SetCollisionProfileName("BlockAll");
+
+	SetActorEnableCollision(true);
+
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->WakeAllRigidBodies();
+	GetMesh()->bBlendPhysics = true;
+
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->SetComponentTickEnabled(false);
+
+	SetLifeSpan(10.0f);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 }

@@ -198,6 +198,8 @@ void AWeaponBase::HandleFiring()
 			CurrentState == EWeaponState::Firing
 			&& GetTimeBetweenShots() > 0.0f;
 
+		OnShot.ExecuteIfBound();
+
 		if (bRefiring)
 		{
 			GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring,

@@ -14,6 +14,30 @@ class UWeaponHandlerComponent;
 class UTpsCharacterMovementComponent;
 class UTpsCharacterStatesComponent;
 
+USTRUCT()
+struct FCharacterStats
+{
+	GENERATED_BODY();
+	
+	UPROPERTY(EditAnywhere)
+		float MaxHealth;
+
+	UPROPERTY(VisibleAnywhere)
+		float Health;
+
+	FCharacterStats()
+	{
+		MaxHealth = 100;
+		Health = MaxHealth;
+	}
+
+	FCharacterStats(float _MaxHealth)
+	{
+		MaxHealth = _MaxHealth;
+		Health = _MaxHealth;
+	}
+};
+
 /*
 * Base class for human Player and NPC.
 */
@@ -33,10 +57,19 @@ protected:
 		UIK_LegsComponent* IK_LegsComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
-		UWeaponHandlerComponent* WeaponHandlerComponent = nullptr;
+		UWeaponHandlerComponent* WeaponHandlerComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
-		UTpsCharacterMovementComponent* TpsCharacterMovementComponent = nullptr;
+		UTpsCharacterMovementComponent* TpsCharacterMovementComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+		FCharacterStats Stats;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animations")
+		UAnimMontage* AM_HitFront;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animations")
+		UAnimMontage* AM_DieFront;
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -66,7 +99,7 @@ protected:
 
 	virtual void PostInitializeComponents() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -91,4 +124,8 @@ public:
 
 	void EnterCombatMode();
 	void EnterRelaxMode();
+
+	void Die();
+
+	void EnableRagdoll();
 };

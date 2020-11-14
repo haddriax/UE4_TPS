@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/PlayerBaseWidget.h"
 #include "WeaponWidget.generated.h"
 
-class ATpsCharacterBase;
 class AWeaponBase;
 
 class UTextBlock;
@@ -15,14 +14,12 @@ class UImage;
 /**
  *
  */
-UCLASS(Blueprintable, Blueprintable)
-class UE4TPS_API UWeaponWidget : public UUserWidget
+UCLASS(Blueprintable)
+class UE4TPS_API UWeaponWidget : public UPlayerBaseWidget
 {
 	GENERATED_BODY()
 
 protected:
-
-	ATpsCharacterBase* Character = nullptr;
 	AWeaponBase* DisplayedWeapon = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))

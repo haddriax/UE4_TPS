@@ -76,7 +76,7 @@ void AWeaponHitscan::FireWeapon()
 	{		
 		if (actorHit->GetClass()->ImplementsInterface(UHitResponsiveInterface::StaticClass()))
 		{
-			Cast<IHitResponsiveInterface>(actorHit)->OnHit(this);
+			CastChecked<IHitResponsiveInterface>(actorHit)->OnHit(this);
 		}	
 	}
 }

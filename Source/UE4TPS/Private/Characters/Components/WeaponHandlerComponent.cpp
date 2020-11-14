@@ -59,7 +59,7 @@ void UWeaponHandlerComponent::PrepareStartingWeapons()
 		AWeaponBase* WeaponWithDeferredSpawn = GetWorld()->SpawnActorDeferred<AWeaponBase>(WeaponClass,
 			FTransform::Identity,
 			GetOwner(),
-			Cast<APawn>(GetOwner()),
+			CastChecked<APawn>(GetOwner()),
 			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
 			);
 
@@ -78,7 +78,7 @@ void UWeaponHandlerComponent::PrepareStartingWeapons()
 		AWeaponBase* WeaponWithDeferredSpawn = GetWorld()->SpawnActorDeferred<AWeaponBase>(WeaponClass,
 			FTransform::Identity,
 			GetOwner(),
-			Cast<APawn>(GetOwner()),
+			CastChecked<APawn>(GetOwner()),
 			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
 			);
 
@@ -118,6 +118,11 @@ void UWeaponHandlerComponent::LoadAnimationMontages()
 	*/
 
 	RecoverMontageNotifications();
+}
+
+void UWeaponHandlerComponent::PlayShotMontage()
+{
+	CastChecked<ATpsCharacterBase>(GetOwner())->PlayAnimMontage(FireSingleWeaponAM);
 }
 
 void UWeaponHandlerComponent::RecoverMontageNotifications()
@@ -417,7 +422,7 @@ void UWeaponHandlerComponent::Reload()
 		{
 
 			// Play the reload animation on the owner.
-			ATpsCharacterBase* Owner = Cast<ATpsCharacterBase>(GetOwner());
+			ATpsCharacterBase* Owner = CastChecked<ATpsCharacterBase>(GetOwner());
 			float AnimDuration = Owner->PlayAnimMontage(ReloadWeaponAM);
 
 			// Reload base on the anim duration.

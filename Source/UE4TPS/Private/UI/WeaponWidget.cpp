@@ -5,7 +5,7 @@
 
 #include "Components/TextBlock.h"
 
-#include "Characters/TpsCharacterBase.h"
+#include "Characters/TpsPlayerCharacter.h"
 #include "Weapons/WeaponBase.h"
 
 void UWeaponWidget::UpdateWeaponDatas()
@@ -59,15 +59,10 @@ UWeaponWidget::UWeaponWidget(const FObjectInitializer& ObjectInitializer)
 void UWeaponWidget::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-
-	Character = Cast<ATpsCharacterBase>(GetOwningPlayerPawn());
 }
 
 void UWeaponWidget::NativeConstruct()
 {
-	Character = Cast<ATpsCharacterBase>(GetOwningPlayerPawn());
-	check(Character);
-
 	Super::NativeConstruct();
 
 	DisplayedWeapon = Character->GetEquippedWeapon();
