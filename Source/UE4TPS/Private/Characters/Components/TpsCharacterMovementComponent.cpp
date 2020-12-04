@@ -27,6 +27,12 @@ UTpsCharacterMovementComponent::UTpsCharacterMovementComponent()
 	RunConfig.Stance = ECharacterStance::Run;
 
 	ActiveConfig = &JogConfig;
+
+	bOrientRotationToMovement = false;
+	bIgnoreBaseRotation = false;
+	bUseControllerDesiredRotation = true;
+
+	RotationRate = FRotator(0, 300, 0);
 }
 
 void UTpsCharacterMovementComponent::OnWeaponEquipped(AWeaponBase* NewlyEquippedWeapon)
@@ -62,6 +68,8 @@ void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick T
 {
 	FRotator r = FQuat::FindBetweenNormals(CharacterOwner->GetActorForwardVector(), Velocity.GetSafeNormal()).Rotator();
 
+	FrameYawDelta = GetLastUpdateRotation().Yaw - GetOwner()->GetActorRotation().Yaw;
+	
 	float UnsignedYawDelta = FMath::Abs(r.Yaw);
 
 	// Speed with direction modifier applied; i.e slower for side movement, even slower backward.
@@ -81,19 +89,13 @@ void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick T
 	// Apply the speed modifier.
 	MaxWalkSpeed = DirectionnalSpeed;
 
-	/*
-	// Debug Display : Show the PLAYER actual speed.
-	if (Cast<APlayerController>(PawnOwner->GetController()))
-		GEngine->AddOnScreenDebugMessage(101, 1.0f, FColor::Emerald, FString::SanitizeFloat(MaxWalkSpeed));
-	*/
-
 	const AController* Controller = CharacterOwner->GetController();
-	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator ControlRotation = Controller->GetControlRotation();
 
 	// Apply the stored input vector to movement.
 	if ((Controller && (InputDirection.X != 0.0f)))
 	{
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		const FRotator YawRotation(0, ControlRotation.Yaw, 0);
 
 		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
@@ -102,14 +104,29 @@ void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick T
 
 	if ((Controller && (InputDirection.Y != 0.0f)))
 	{
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		const FRotator YawRotation(0, ControlRotation.Yaw, 0);
 
 		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 		AddInputVector(WorldDirection * InputDirection.Y, false);
 	}
 
+	// Stored to ensure we override the base CharacterMovement Rotation.
+	const FRotator ActorRotation = GetOwner()->GetActorRotation();
+
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	/*
+	if (!FreeMove)
+	{
+		const float RotationSpeed = 10.0f;
+		// FRotator NewActorRotation = FMath::RInterpTo(ActorRotation, ControlRotation, DeltaTime, RotationSpeed);
+		FRotator NewActorRotation = ControlRotation;
+		NewActorRotation.Pitch = ActorRotation.Pitch;
+		NewActorRotation.Roll = ActorRotation.Roll;
+		GetOwner()->SetActorRotation(NewActorRotation);
+	}
+	*/
 }
 
 void UTpsCharacterMovementComponent::MoveForward(float InputValue)
@@ -157,18 +174,12 @@ ECharacterStance UTpsCharacterMovementComponent::LoadMovementConfigs(ECharacterS
 
 void UTpsCharacterMovementComponent::EnableTravelMode()
 {
-	MovementType = ECharacterGlobalMovementMode::Travel;
-
-	bOrientRotationToMovement = true;
-	TpsCharacter->bUseControllerRotationYaw = false;
+	MovementType = ECharacterGlobalMovementMode::Travel;	
 }
 
 void UTpsCharacterMovementComponent::EnableCombatMode()
 {
 	MovementType = ECharacterGlobalMovementMode::Combat;
-
-	bOrientRotationToMovement = false;
-	TpsCharacter->bUseControllerRotationYaw = true;
 }
 
 void UTpsCharacterMovementComponent::EnableSprint()

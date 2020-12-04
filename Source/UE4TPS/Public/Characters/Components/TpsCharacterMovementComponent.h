@@ -123,6 +123,21 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 		FMovementState CharaMovementState;
+
+	/*
+	* Delta between last frame Yaw and this frame Yaw from Actor rotation.
+	*/
+	float FrameYawDelta;
+
+	FRotator LastRotation;
+
+	/*
+	* True : Movement is independ from the Controller direction.
+	* False : Player will alway try to face Controller direction.
+	*/
+	UPROPERTY(EditAnywhere)
+	bool FreeMove = false;
+
 public:
 	UTpsCharacterMovementComponent();
 
@@ -156,6 +171,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE bool HaveWeaponInHand() const { return bWeaponIsInHand; }
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE float GetYawDelta() const { return FrameYawDelta; }
 
 	void SetWeaponIsInHand(bool WeaponInHand) { bWeaponIsInHand = WeaponInHand; }
 

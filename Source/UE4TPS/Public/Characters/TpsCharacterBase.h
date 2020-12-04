@@ -77,6 +77,12 @@ protected:
 	*/
 	float AimPitch;
 
+	/*
+	* Yaw applied for the Additive Aim Space.
+	* [-90; 90]
+	*/
+	float AimYaw;
+
 	FRotator PrevRotation;
 
 	/*
@@ -103,6 +109,14 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE float GetAimPitch() const { return AimPitch; }
+
+
+	/*
+	* Yaw applied for the Additive Aim Space.
+	* [-90; 90]
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE float GetAimYaw() const { return AimYaw; }
 
 	/*
 	* Fast accessor for the equipped weapon.

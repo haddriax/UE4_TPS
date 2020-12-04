@@ -26,12 +26,21 @@ ATpsPlayerCharacter::ATpsPlayerCharacter(const FObjectInitializer& ObjectInitial
 	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
+	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+
+	AutoPossessAI = EAutoPossessAI::Disabled;
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bIgnoreBaseRotation = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 }
 
 void ATpsPlayerCharacter::BeginPlay()
@@ -41,6 +50,7 @@ void ATpsPlayerCharacter::BeginPlay()
 	APlayerController* PC = Cast<APlayerController>(GetController());
 
 	check(PC);
+
 	// Create and add the weapon widget.
 	WeaponUI = CreateWidget<UWeaponWidget>(PC, WeaponUIClass);
 	if (WeaponUI)
@@ -53,12 +63,17 @@ void ATpsPlayerCharacter::BeginPlay()
 
 	// CastChecked<APlayerController>(GetController())->ClientSetCameraFade
 
-	ToggleLockCamera();
+	// ToggleLockCamera();
 }
 
 void ATpsPlayerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+
+	if (!Cast<UTpsCharacterMovementComponent>(GetCharacterMovement()))
+	{
+		UE_LOG(LogTemp, Display, TEXT("X % - GetCharacterMovement() can not be cast to UTpsCharacterMovementComponent."), TEXT(__FUNCTION__));
+	}
 }
 
 void ATpsPlayerCharacter::AddControllerYawInput(float Val)
@@ -116,8 +131,32 @@ void ATpsPlayerCharacter::Tick(float DeltaTime)
 
 	// Compute Aim Pitch (used in AnimBP).
 	const FVector TraceWorldEnd = (CameraTraceHit.bBlockingHit ? CameraTraceHit.ImpactPoint : CameraTraceHit.TraceEnd);
-	AimPitch = UKismetMathLibrary::FindLookAtRotation(CameraTraceHit.TraceStart, TraceWorldEnd).Pitch;
+	const FRotator AimRotator = UKismetMathLibrary::FindLookAtRotation(CameraTraceHit.TraceStart, TraceWorldEnd);
+	AimPitch = AimRotator.Pitch;
 
+	const FRotator Local_ControlRotation =
+		GetRootComponent()->GetComponentTransform().InverseTransformRotation(
+			GetController()->GetControlRotation().Quaternion()
+		).Rotator();
+
+	// Compute Aim Yaw, which is the delta Yaw between Character Movement Direction and Controller.
+	if (GetCharacterMovement()->Velocity.SizeSquared() > 0)
+	{
+		const FRotator Local_Velocity = FRotationMatrix::MakeFromXZ(
+			GetRootComponent()->GetComponentTransform().InverseTransformVector(GetCharacterMovement()->Velocity),
+			FVector::UpVector
+		).Rotator();
+
+		AimYaw = Local_Velocity.Yaw - Local_ControlRotation.Yaw;
+	}
+	else
+	{
+		AimYaw = 0 + Local_ControlRotation.Yaw;
+	}
+
+	// GEngine->AddOnScreenDebugMessage(1288, 10.0f, FColor::Emerald, FString::SanitizeFloat(AimYaw));
+	
+	/*
 	TArray<FName> CurvesNames;
 	GetMesh()->AnimScriptInstance->GetAllCurveNames(CurvesNames);
 
@@ -126,7 +165,7 @@ void ATpsPlayerCharacter::Tick(float DeltaTime)
 	{
 		// GEngine->AddOnScreenDebugMessage(i++, 0.0f, FColor::Green, name.ToString());
 	}
-	
+
 	float Speed;
 	if (GetMesh()->AnimScriptInstance->GetCurveValue(FName("Speed"), Speed))
 	{
@@ -135,6 +174,7 @@ void ATpsPlayerCharacter::Tick(float DeltaTime)
 
 	// FAnimMontageInstance* m;
 	//m = GetMesh()->AnimScriptInstance->GetActiveMontageInstance();
+	*/
 }
 
 void ATpsPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

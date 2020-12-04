@@ -74,7 +74,6 @@ void ATpsCharacterBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	DeltaRotator = GetActorRotation() - PrevRotation;
-
 	PrevRotation = GetActorRotation();
 }
 
