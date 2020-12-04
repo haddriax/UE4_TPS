@@ -6,6 +6,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "Characters/Components/WeaponHandlerComponent.h"
 #include "Characters/Components/TpsCharacterMovementComponent.h"
@@ -49,6 +51,8 @@ void ATpsPlayerCharacter::BeginPlay()
 		WeaponUI->AddToViewport(32);
 	}
 
+	// CastChecked<APlayerController>(GetController())->ClientSetCameraFade
+
 	ToggleLockCamera();
 }
 
@@ -87,9 +91,50 @@ void ATpsPlayerCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+FHitResult ATpsPlayerCharacter::TraceFromCameraCenter()
+{
+	const UWorld* World = GetWorld();
+
+	FHitResult Hit;
+
+	if (World)
+	{
+		const FVector TraceStart = FollowCamera->GetComponentLocation();
+		const FVector TraceEnd = FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * 1000);
+		// GetWorld()->AsyncLineTraceByChannel
+		World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, FCollisionQueryParams::DefaultQueryParam, FCollisionResponseParams::DefaultResponseParam);
+	}
+
+	return Hit;
+}
+
 void ATpsPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	const FHitResult CameraTraceHit = TraceFromCameraCenter();
+
+	// Compute Aim Pitch (used in AnimBP).
+	const FVector TraceWorldEnd = (CameraTraceHit.bBlockingHit ? CameraTraceHit.ImpactPoint : CameraTraceHit.TraceEnd);
+	AimPitch = UKismetMathLibrary::FindLookAtRotation(CameraTraceHit.TraceStart, TraceWorldEnd).Pitch;
+
+	TArray<FName> CurvesNames;
+	GetMesh()->AnimScriptInstance->GetAllCurveNames(CurvesNames);
+
+	int i = 0;
+	for (FName name : CurvesNames)
+	{
+		// GEngine->AddOnScreenDebugMessage(i++, 0.0f, FColor::Green, name.ToString());
+	}
+	
+	float Speed;
+	if (GetMesh()->AnimScriptInstance->GetCurveValue(FName("Speed"), Speed))
+	{
+		// GEngine->AddOnScreenDebugMessage(i++, 0.0f, FColor::Green, FString::SanitizeFloat(Speed));
+	}
+
+	// FAnimMontageInstance* m;
+	//m = GetMesh()->AnimScriptInstance->GetActiveMontageInstance();
 }
 
 void ATpsPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

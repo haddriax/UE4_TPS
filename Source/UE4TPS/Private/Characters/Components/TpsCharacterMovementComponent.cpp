@@ -12,85 +12,22 @@
 UTpsCharacterMovementComponent::UTpsCharacterMovementComponent()
 {
 	WalkConfig.ForwardSpeed = 128.195f;
+	WalkConfig.BackwardSpeed = 103.015f;
+	WalkConfig.SideSpeed = 102.243f;
+	WalkConfig.Stance = ECharacterStance::Walk;
+
 	JogConfig.ForwardSpeed = 346.000f;
+	JogConfig.BackwardSpeed = 248.388f;
+	JogConfig.SideSpeed = 310.637f;
+	JogConfig.Stance = ECharacterStance::Jog;
+
 	RunConfig.ForwardSpeed = 630.450f;
+	RunConfig.BackwardSpeed = 346.000f;
+	RunConfig.SideSpeed = 346.000f;
+	RunConfig.Stance = ECharacterStance::Run;
+
+	ActiveConfig = &JogConfig;
 }
-
-/*
-void UTpsCharacterMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
-{
-
-	switch (CustomMovementMode)
-	{
-	case (uint8)ECustomMovementMode::TESTMOVE_Sprinting:
-		PhysCustomSprinting(deltaTime, Iterations);
-		break;
-	case (uint8)ECustomMovementMode::TESTMOVE_WalkAiming:
-		PhysCustomAiming(deltaTime, Iterations);
-		break;
-	default:
-		break;
-	}
-
-	Super::PhysCustom(deltaTime, Iterations);
-}
-
-void UTpsCharacterMovementComponent::PhysCustomSprinting(float deltaTime, int32 Iterations)
-{
-	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Green, FString(TEXT(__FUNCTION__)));
-}
-
-void UTpsCharacterMovementComponent::PhysCustomAiming(float deltaTime, int32 Iterations)
-{
-	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Yellow, FString(TEXT(__FUNCTION__)));
-}
-
-void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-
-	if (CanAimInCurrentState() && WantToAim())
-	{
-		SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::TESTMOVE_WalkAiming);
-	}
-	else
-	{
-		CustomMovementMode = (uint8)ECustomMovementMode::TESTMOVE_NONE;
-		SetMovementMode(MOVE_Walking);
-	}
-
-}
-
-void UTpsCharacterMovementComponent::UpdateCharacterStateBeforeMovement(float DeltaSeconds)
-{
-	Super::UpdateCharacterStateBeforeMovement(DeltaSeconds);
-
-	if (WantsToAim() && CanAimInCurrentState())
-	{
-		MaxWalkSpeed = 200;
-		MaxWalkSpeedCrouched = 100;
-	}
-	else
-	{
-		MaxWalkSpeed = 600;
-		MaxWalkSpeedCrouched = 300;
-	}
-
-}
-
-void UTpsCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
-{
-	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
-
-
-	if (CustomMovementMode == (uint8)ECustomMovementMode::TESTMOVE_WalkAiming
-	&& PreviousCustomMode != (uint8)ECustomMovementMode::TESTMOVE_WalkAiming)
-	{
-		MaxWalkSpeed = 100;
-	}
-}
-*/
 
 void UTpsCharacterMovementComponent::OnWeaponEquipped(AWeaponBase* NewlyEquippedWeapon)
 {
@@ -111,13 +48,6 @@ void UTpsCharacterMovementComponent::SubscribeToWeaponHandlerComponent()
 	// TpsCharacter->GetWeaponHandlerComponent()->OnUnequipWeapon.AddUniqueDynamic(this, &UTpsCharacterMovementComponent::OnWeaponUnequipped);
 }
 
-void UTpsCharacterMovementComponent::ApplyMovementConfigs(const FMovementConfig& MovementConfigs)
-{
-	ForwardMovementResponsivity = MovementConfigs.ForwardMovementResponsivity;
-	RightMovementResponsivity = MovementConfigs.ForwardMovementResponsivity;
-	MaxWalkSpeed = MovementConfigs.ForwardSpeed;
-}
-
 void UTpsCharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -130,94 +60,71 @@ void UTpsCharacterMovementComponent::BeginPlay()
 
 void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	FRotator r = FQuat::FindBetweenNormals(CharacterOwner->GetActorForwardVector(), Velocity.GetSafeNormal()).Rotator();
+
+	float UnsignedYawDelta = FMath::Abs(r.Yaw);
+
+	// Speed with direction modifier applied; i.e slower for side movement, even slower backward.
+	float DirectionnalSpeed;
+
+	// Forward to side.
+	if (UnsignedYawDelta >= 0 && UnsignedYawDelta <= 90)
+	{
+		DirectionnalSpeed = FMath::Lerp(ActiveConfig->ForwardSpeed, ActiveConfig->SideSpeed, UnsignedYawDelta / 90);
+	}
+	// Side to backward.
+	else
+	{
+		DirectionnalSpeed = FMath::Lerp(ActiveConfig->SideSpeed, ActiveConfig->BackwardSpeed, (UnsignedYawDelta - 90) / 90);
+	}
+
+	// Apply the speed modifier.
+	MaxWalkSpeed = DirectionnalSpeed;
 
 	/*
-	// Draw velocity
-	DrawDebugLine(
-		GetWorld(),
-		GetActorLocation(),
-		GetActorLocation() + Velocity.GetSafeNormal() * 100,
-		FColor::Yellow,
-		false,
-		0.0f,
-		'\000',
-		1.0f
-	);
+	// Debug Display : Show the PLAYER actual speed.
+	if (Cast<APlayerController>(PawnOwner->GetController()))
+		GEngine->AddOnScreenDebugMessage(101, 1.0f, FColor::Emerald, FString::SanitizeFloat(MaxWalkSpeed));
+	*/
 
 	const AController* Controller = CharacterOwner->GetController();
-	if ((Controller && (InputDirection != FVector::ZeroVector)))
+	const FRotator Rotation = Controller->GetControlRotation();
+
+	// Apply the stored input vector to movement.
+	if ((Controller && (InputDirection.X != 0.0f)))
 	{
-		const FVector TargetedDirection = TpsCharacter->GetActorTransform().TransformVector(InputDirection.GetSafeNormal());
-		const FVector ActualDirection = Acceleration.GetSafeNormal();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		const FVector FinalMovement = FMath::VInterpTo(ActualDirection, TargetedDirection, DeltaTime, 10.0f);
-		
+		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-		// Draw input direction.
-		DrawDebugLine(
-			GetWorld(),
-			GetActorLocation(),
-			GetActorLocation() + TargetedDirection * 100,
-			FColor::Green,
-			false,
-			0.0f,
-			'\000',
-			2.0f
-		);
-
-		// Draw input FinalMovement.
-		DrawDebugLine(
-			GetWorld(),
-			GetActorLocation(),
-			GetActorLocation() + FinalMovement * 100,
-			FColor::Red,
-			false,
-			0.0f,
-			'\000',
-			2.0f
-		);
-
-		AddInputVector(FinalMovement, false);
+		AddInputVector(WorldDirection * InputDirection.X, false);
 	}
-	*/
+
+	if ((Controller && (InputDirection.Y != 0.0f)))
+	{
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		AddInputVector(WorldDirection * InputDirection.Y, false);
+	}
+
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
 void UTpsCharacterMovementComponent::MoveForward(float InputValue)
 {
 	InputDirection.X = InputValue;
-	
-	const AController*  Controller = CharacterOwner->GetController();
-	if ((Controller && (InputValue != 0.0f)))
-	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		AddInputVector(WorldDirection * InputValue, false);
-	}
 }
 
 void UTpsCharacterMovementComponent::MoveRight(float InputValue)
 {
 	InputDirection.Y = InputValue;
-	
-	const AController* Controller = CharacterOwner->GetController();
-	if ((Controller && (InputValue != 0.0f)))
-	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		const FVector WorldDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		AddInputVector(WorldDirection * InputValue, false);
-	}
 }
 
 ECharacterStance UTpsCharacterMovementComponent::LoadMovementConfigs(ECharacterStance NewMovementConfig)
 {
-	const ECharacterStance OldStance = LoadedCharacterStance;
+	const ECharacterStance OldStance = ActiveConfig->Stance;
 
 	switch (NewMovementConfig)
 	{
@@ -243,11 +150,7 @@ ECharacterStance UTpsCharacterMovementComponent::LoadMovementConfigs(ECharacterS
 		break;
 	}
 
-	LoadedCharacterStance = NewMovementConfig;
-
 	MaxWalkSpeed = ActiveConfig->ForwardSpeed;
-	ForwardMovementResponsivity = ActiveConfig->ForwardMovementResponsivity;
-	RightMovementResponsivity = ActiveConfig->RightMovementResponsivity;
 
 	return OldStance;
 }
@@ -271,10 +174,6 @@ void UTpsCharacterMovementComponent::EnableCombatMode()
 void UTpsCharacterMovementComponent::EnableSprint()
 {
 	LoadMovementConfigs(ECharacterStance::Run);
-	LoadedCharacterStance = ECharacterStance::Run;
-
-	ForwardMovementResponsivity = SprintForwardMovementResponsivity;
-	RightMovementResponsivity = SprintRightMovementResponsivity;
 
 	if (OnSprintStart.IsBound())
 	{
@@ -285,7 +184,6 @@ void UTpsCharacterMovementComponent::EnableSprint()
 void UTpsCharacterMovementComponent::DisableSprint()
 {
 	LoadMovementConfigs(ECharacterStance::Jog);
-	LoadedCharacterStance = ECharacterStance::Jog;
 
 	if (OnSprintStop.IsBound())
 	{
@@ -296,11 +194,9 @@ void UTpsCharacterMovementComponent::DisableSprint()
 void UTpsCharacterMovementComponent::EnableWalk()
 {
 	LoadMovementConfigs(ECharacterStance::Walk);
-	LoadedCharacterStance = ECharacterStance::Walk;
 }
 
 void UTpsCharacterMovementComponent::DisableWalk()
 {
 	LoadMovementConfigs(ECharacterStance::Jog);
-	LoadedCharacterStance = ECharacterStance::Walk;
 }

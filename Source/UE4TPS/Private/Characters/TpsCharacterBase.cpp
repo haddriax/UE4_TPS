@@ -73,6 +73,9 @@ void ATpsCharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	DeltaRotator = GetActorRotation() - PrevRotation;
+
+	PrevRotation = GetActorRotation();
 }
 
 float ATpsCharacterBase::PlayAnimMontage(UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
@@ -121,9 +124,11 @@ void ATpsCharacterBase::StartFire()
 {
 	AWeaponBase* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
 
-	if (weapon && GetTpsCharacterMovementComponent()->AllowFiring())
+	if (weapon 
+		&& GetTpsCharacterMovementComponent()->AllowFiring()
+		&& GetWeaponHandlerComponent()->AllowShooting())
 	{
-		GetWeaponHandlerComponent()->GetEquippedWeapon()->StartFireOrder();
+		GetWeaponHandlerComponent()->GetEquippedWeapon()->TryShooting();
 	}
 }
 
@@ -133,7 +138,7 @@ void ATpsCharacterBase::StopFire()
 
 	if (weapon)
 	{
-		GetWeaponHandlerComponent()->GetEquippedWeapon()->StopFireOrder();
+		GetWeaponHandlerComponent()->GetEquippedWeapon()->StopShooting();
 	}
 }
 

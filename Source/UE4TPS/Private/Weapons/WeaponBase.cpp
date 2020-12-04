@@ -11,12 +11,12 @@
 AWeaponBase::AWeaponBase()
 {
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh1P");
-	WeaponMesh->CastShadow = false;
+	WeaponMesh->CastShadow = true;
 	WeaponMesh->bReceivesDecals = false;
 	WeaponMesh->SetCollisionObjectType(ECC_WorldDynamic);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-		
+
 	SetRootComponent(WeaponMesh);
 
 	WeaponFeedbacksComponent = CreateDefaultSubobject<UWeaponFeedbacksComponent>("WeaponFeedbacks");
@@ -49,33 +49,6 @@ void AWeaponBase::BeginPlay()
 	{
 		AttachToPawnHoslterSlot(ParentCharacter);
 	}
-}
-
-void AWeaponBase::DetermineWeaponState()
-{
-	EWeaponState State = EWeaponState::Idle;
-
-	if (bIsEquipped == true)
-	{
-		if (bPendingReload == true)
-		{
-			State = EWeaponState::Reloading;
-		}
-		else if (bWantToFire && CanFire())
-		{
-			State = EWeaponState::Firing;
-		}
-	}
-	else if (bPendingUnequip == true)
-	{
-		State = EWeaponState::Unequipping;
-	}
-	else if (bPendingEquip == true)
-	{
-		State = EWeaponState::Equipping;
-	}
-
-	SetWeaponState(State);
 }
 
 void AWeaponBase::AttachToPawnHand(ATpsCharacterBase* Character)
@@ -149,12 +122,16 @@ void AWeaponBase::OnBurstStarted()
 	// If LastFireTime && WeaponDatas.TimeBetweenShots are valid, and the TimeBetweenShots is NOT elapsed.
 	if (LastFireTime > 0 && GetTimeBetweenShots() > 0.0f && (LastFireTime + GetTimeBetweenShots() > gameTime))
 	{
-		// Set a non looping Timer which will manage firing when ready.
-		GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring,
-			this,
-			&AWeaponBase::HandleRefiring,
-			LastFireTime + GetTimeBetweenShots() - gameTime,
-			false);
+		if (WeaponDatas.bIsAutomaticWeapon)
+		{
+			// Set a non looping Timer which will manage firing when ready.
+			GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring,
+				this,
+				&AWeaponBase::HandleRefiring,
+				LastFireTime + GetTimeBetweenShots() - gameTime,
+				false);
+		}
+
 	}
 	else
 	{
@@ -178,6 +155,7 @@ void AWeaponBase::OnBurstEnded()
 
 void AWeaponBase::FireWeapon()
 {
+	// Should not be called on base class.
 	unimplemented();
 }
 
@@ -193,12 +171,20 @@ void AWeaponBase::HandleFiring()
 
 		FireWeapon();
 
-		// Handle Refiring.
-		bRefiring =
-			CurrentState == EWeaponState::Firing
-			&& GetTimeBetweenShots() > 0.0f;
+		GEngine->AddOnScreenDebugMessage(64, 10.0f, FColor::Blue, FString::SanitizeFloat(GetTimeBetweenShots()));
+		GEngine->AddOnScreenDebugMessage(64, 10.0f, FColor::Red, FString::SanitizeFloat(IsFiring()));
 
-		OnShot.ExecuteIfBound();
+		// Handle Refiring.
+		bRefiring = 
+			IsFiring()
+			&& GetTimeBetweenShots() > 0.0f
+			&& WeaponDatas.bIsAutomaticWeapon;
+
+		// Broadcast the OnShot Event.
+		if (OnShot.IsBound())
+		{
+			OnShot.Broadcast();
+		}
 
 		if (bRefiring)
 		{
@@ -209,7 +195,12 @@ void AWeaponBase::HandleFiring()
 				false
 			);
 		}
+		else
+		{
+			SetWeaponState(EWeaponState::Idle);
+		}
 	}
+	// Can't shoot in the middle of a burst.
 	else if (BurstCounter > 0)
 	{
 		// End the burst if we cannot fire anymore (ex : out of ammo).
@@ -230,7 +221,7 @@ void AWeaponBase::HandleRefiring()
 int32 AWeaponBase::AddRandomDirectionFromCone(FVector& DirectionToModify, float HorizontalAngle, float VerticalAngle, bool bAreRadiantAngles /*= true*/)
 {
 	const int32 RandomSeed = FMath::Rand();
-	FRandomStream rnStream(RandomSeed);
+	const FRandomStream rnStream(RandomSeed);
 
 	if (bAreRadiantAngles)
 	{
@@ -256,8 +247,7 @@ void AWeaponBase::SetPlayer(ATpsCharacterBase* _Player)
 
 void AWeaponBase::SetWeaponState(EWeaponState NewState)
 {
-	EWeaponState const PreviousState = CurrentState;
-
+	const EWeaponState PreviousState = CurrentState;
 	CurrentState = NewState;
 
 	// If we finished firing ...
@@ -265,7 +255,7 @@ void AWeaponBase::SetWeaponState(EWeaponState NewState)
 	{
 		OnBurstEnded();
 
-		if (OnFireStop.IsBound() == true)
+		if (OnFireStop.IsBound())
 		{
 			OnFireStop.Execute();
 		}
@@ -276,7 +266,7 @@ void AWeaponBase::SetWeaponState(EWeaponState NewState)
 	{
 		OnBurstStarted();
 
-		if (OnFireStart.IsBound() == true)
+		if (OnFireStart.IsBound())
 		{
 			OnFireStart.Execute();
 		}
@@ -293,119 +283,106 @@ FVector AWeaponBase::GetShotWorldDirection() const
 	return GetMesh()->GetSocketLocation(GetShotDirectionSocketName()) - GetMesh()->GetSocketLocation(GetMuzzleAttachPoint());
 }
 
-void AWeaponBase::StartFireOrder()
+void AWeaponBase::TryShooting()
 {
-	if (bWantToFire == false)
+	if (!IsFiring() && CanFire())
 	{
-		bWantToFire = true;
-		DetermineWeaponState();
+		SetWeaponState(EWeaponState::Firing);
 	}
 }
 
-void AWeaponBase::StopFireOrder()
+void AWeaponBase::StopShooting()
 {
-	if (bWantToFire == true)
+	if (IsFiring())
 	{
-		bWantToFire = false;
-		DetermineWeaponState();
+		SetWeaponState(EWeaponState::Idle);
 	}
 }
 
 bool AWeaponBase::CanFire() const
 {
 	// Can fire if is doing nothing or if is already firing.
-	bool bStateAllowFire = (CurrentState == EWeaponState::Idle) || (CurrentState == EWeaponState::Firing);
+	bool bStateAllowFire = (IsIdling() || IsFiring());
 
 	// Ensure Player is referenced and not reloading.
-	return ((bStateAllowFire == true) && (bPendingReload == false) && (AmmunitionsInClip > 0));
+	return ((bStateAllowFire) && (!IsPendingReload()) && (AmmunitionsInClip > 0));
 }
 
 bool AWeaponBase::CanReload() const
 {
-	bool bStateAllowReload =
-		(CurrentState == EWeaponState::Idle)
+	bool bStateAllowReload = (!IsPendingEquip())
+		&& (!IsPendingUnequip())
+		&& (!IsPendingReload())
 		&& (AmmunitionsReserve > 0)
 		&& (GetAmmunitionInClip() < GetClipSize());
 
-	return ((bStateAllowReload == true) && (bPendingReload == false));
+	return bStateAllowReload;
 }
 
 bool AWeaponBase::CanSwitchWeapon() const
 {
-	return (CurrentState == EWeaponState::Idle);
+	return IsIdling()
+		|| IsFiring();
 }
 
 bool AWeaponBase::EquipOn(ATpsCharacterBase* _Character)
 {
-	if (bPendingEquip)
+	if (CanSwitchWeapon())
 	{
-		return false;
+		SetPlayer(_Character);
+
+		SetWeaponState(EWeaponState::Equipping);
+
+		WeaponFeedbacksComponent->SimulateRaiseWeapon();
+
+		return true;
 	}
 
-	SetPlayer(_Character);
-
-	// Attach the Weapon mesh to the AFPSCharacter socket.
-	// AttachToPawnHand(_Character);
-
-	bPendingEquip = true;
-
-	WeaponFeedbacksComponent->SimulateRaiseWeapon();
-
-	DetermineWeaponState();
-
-	return true;
+	return false;
 }
 
 void AWeaponBase::EquipFinished()
 {
-	bPendingEquip = false;
+	SetWeaponState(EWeaponState::Idle);
 	bIsEquipped = true;
-
-	DetermineWeaponState();
-
 }
 
 bool AWeaponBase::Unequip()
 {
-	if (bPendingEquip)
+	if (CanSwitchWeapon())
 	{
-		return false;
+		SetWeaponState(EWeaponState::Unequipping);
+
+		WeaponFeedbacksComponent->SimulateLowerWeapon();
+
+		return true;
 	}
 
-	bPendingUnequip = true;
-
-	DetermineWeaponState();
-
-	WeaponFeedbacksComponent->SimulateLowerWeapon();
-
-	UnequipFinished();
-
-	return true;
+	return false;
 }
 
 void AWeaponBase::UnequipFinished()
 {
-	// DetachFromPawn();
-
-	bPendingUnequip = false;
+	SetWeaponState(EWeaponState::Idle);
 	bIsEquipped = false;
 
-	DetermineWeaponState();
+	SetPlayer(nullptr);
 }
 
 void AWeaponBase::Reload(float ReloadDuration)
 {
 	if (CanReload())
 	{
-		bPendingReload = true;
+		// Reloading can cancel shooting.
+		StopShooting();
 
-		DetermineWeaponState();
+		SetWeaponState(EWeaponState::Reloading);
 
 		WeaponFeedbacksComponent->SimulateReloading();
 
 		// Prepare the ReloadFinished call.
 		GetWorldTimerManager().SetTimer(
-			TimerHandle_Reload,
+			TimerHandle_WeaponAction,
 			this,
 			&AWeaponBase::OnReloadFinished,
 			ReloadDuration,
@@ -419,9 +396,7 @@ void AWeaponBase::OnReloadFinished()
 
 	AddAmmuntionsInClip(addToClip);
 
-	bPendingReload = false;
-
-	DetermineWeaponState();
+	SetWeaponState(EWeaponState::Idle);
 }
 
 int32 AWeaponBase::GetAmmuntionsFromReserve(int32 Amount)

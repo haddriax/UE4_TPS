@@ -143,6 +143,12 @@ struct FWeaponDatas
 		float ReloadDuration;
 
 	/*
+	* Automtic fire or single shot.
+	*/
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
+		bool bIsAutomaticWeapon;
+
+	/*
 	* Defaults values.
 	*/
 	FWeaponDatas()
@@ -158,6 +164,7 @@ struct FWeaponDatas
 		SpreadRecovery = 10.0f;
 		Damage = 10.0f;
 		RateOfFire = 5.0f;
+		bIsAutomaticWeapon = true;
 	}
 
 };
@@ -177,7 +184,7 @@ public:
 	DECLARE_DELEGATE(FOnFireStart);
 	FOnFireStart OnFireStart;
 
-	DECLARE_DELEGATE(FOnShot);
+	DECLARE_MULTICAST_DELEGATE(FOnShot);
 	FOnShot OnShot;
 
 private:
@@ -210,10 +217,6 @@ protected:
 		FName MuzzleDirection_SocketName = "MuzzleDirectionSocket";
 
 	bool bIsEquipped = false;
-	bool bPendingEquip = false;
-	bool bPendingUnequip = false;
-	bool bPendingReload = false;
-	bool bWantToFire = false;
 	bool bRefiring = false;
 
 	bool bIsPlayingFireAnimation = false;
@@ -244,17 +247,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Weapon")
 		int32 AmmunitionsInClip = 0;
 
-	EWeaponState CurrentState;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		EWeaponState CurrentState;
 
-	/** weapon datas */
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Configs")
 		FWeaponDatas WeaponDatas;
 
 	// Timers Handle
 	FTimerHandle TimerHandle_HandleFiring;
-	FTimerHandle TimerHandle_EquipWeapon;
-	FTimerHandle TimerHandle_UnequipWeapon;
-	FTimerHandle TimerHandle_Reload;
+	FTimerHandle TimerHandle_WeaponAction;
 
 public:
 	/*
@@ -294,19 +295,13 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 	virtual void BeginPlay() override;
-private:
 
 protected:
-	/*
-	* Check and Set the correct state for the weapon.
-	*/
-	void DetermineWeaponState();
-
 	/*
 	* Attach the weapon to the owning player hand, and snap it to the weapon socket.
 	*/
 	UFUNCTION()
-	void AttachToPawnHand(ATpsCharacterBase* Character);
+		void AttachToPawnHand(ATpsCharacterBase* Character);
 
 	/*
 	* Attach the weapon to the owning player dedicated holster slot.
@@ -314,19 +309,19 @@ protected:
 	void AttachToPawnHoslterSlot(ATpsCharacterBase* Character);
 
 	UFUNCTION()
-	/*
-	* Attach and snap this weapon to a socket.
-	* @param The USkeletalMeshComponent where we want to attach the weapon.
-	* @param The socket name where the weapon should snap.
-	* @return True - The attachment was successful.
-	*/
-	bool AttachToSocket(USkeletalMeshComponent* MeshToAttachOn, FName SocketName);
+		/*
+		* Attach and snap this weapon to a socket.
+		* @param The USkeletalMeshComponent where we want to attach the weapon.
+		* @param The socket name where the weapon should snap.
+		* @return True - The attachment was successful.
+		*/
+		bool AttachToSocket(USkeletalMeshComponent* MeshToAttachOn, FName SocketName);
 
 	/*
 	* Detach the weapon from it's owner and hide it.
 	*/
 	UFUNCTION()
-	void DetachFromPawn();
+		void DetachFromPawn();
 
 	/*
 	* Manage timer for shots.
@@ -383,6 +378,21 @@ public:
 		bool IsWeaponEquipped() const { return bIsEquipped; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
+		bool IsIdling() const { return CurrentState == EWeaponState::Idle; }
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
+		bool IsPendingReload() const { return CurrentState == EWeaponState::Reloading; }
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
+		bool IsPendingEquip() const { return CurrentState == EWeaponState::Equipping; }
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
+		bool IsPendingUnequip() const { return CurrentState == EWeaponState::Unequipping; }
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
+		bool IsFiring() const { return CurrentState == EWeaponState::Firing; }
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
 		int32 GetMaxAmmunitionsReserve() const { return WeaponDatas.MaxAmmunitions; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
@@ -421,12 +431,12 @@ public:
 	/*
 	* Ask this weapon to start firing, if possible.
 	*/
-	void StartFireOrder();
+	void TryShooting();
 
 	/*
 	* Ask this weapon to stop firing, if possible.
 	*/
-	void StopFireOrder();
+	void StopShooting();
 
 	/*
 	* @return True - The weapon can currently fire.

@@ -7,6 +7,7 @@
 #include "WeaponHandlerComponent.generated.h"
 
 class AWeaponBase;
+class ATpsCharacterBase;
 
 /*
 * WeaponHolding state.
@@ -15,12 +16,10 @@ UENUM(BlueprintType)
 enum class EWeaponHoldingState : uint8
 {
 	NoWeapon,
-	PrimaryEquipped,
-	SecondaryEquipped,
+	PrimaryIdle,
 	EquippingPrimary,
 	UnequippingPrimary,
-	EquippingSecondary,
-	UnequippingSecondary,
+	ReloadingPrimary,
 	Undefined
 };
 
@@ -118,19 +117,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 		TSoftClassPtr<AWeaponBase> PrimaryStartingWeapon;
 
-	UPROPERTY(EditDefaultsOnly)
-		TSoftClassPtr<AWeaponBase> SecondaryStartingWeapon;
-
 	/*
 	*
 	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		AWeaponBase* PrimaryWeapon = nullptr;
-	/*
-	*
-	*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		AWeaponBase* SecondaryWeapon = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		AWeaponBase* EquippedWeapon = nullptr;
@@ -140,7 +131,9 @@ protected:
 
 	USkeletalMeshComponent* CharacterMesh = nullptr;
 
-	FTimerHandle TimerHandle_EquipWeapon;
+	ATpsCharacterBase* CharacterOwner = nullptr;
+
+	FTimerHandle TimerHandle_WeaponAction;
 
 	bool bUseHandIK = false;
 
@@ -163,21 +156,56 @@ public:
 		bool IsEquippingAnyWeapon() const;
 
 	/*
+	* Is a weapon currently pending unequip ?
+	*/
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+		bool IsUnequippingAnyWeapon() const;
+
+	/*
+	* Is the any weapon currently equipped ?
+	*/
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+		bool IsAnyWeaponEquipped() const;
+
+	/*
 	* Is the Primary weapon currently equipped ?
 	*/
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 		bool IsPrimaryEquipped() const;
 
 	/*
-	* Is the Secondary weapon currently equipped ?
+	* Is equippied weapon pending reload ?
 	*/
 	UFUNCTION(BlueprintPure, BlueprintCallable)
-		bool IsSecondaryEquipped() const;
+		bool IsPendingReload() const;
+
+	/*
+	* Can we currently Equip/Unequip the weapon ?
+	*/
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+		bool CanSwitchWeapon() const;
+
+	/*
+	* Can we currently reload the equipped weapon ?
+	*/
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+		bool CanReload() const;
+
+	/*
+	* Can we actually shoot with the equipped weapon ?
+	*/
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+		bool AllowShooting() const;
+
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
-		FORCEINLINE bool ShouldUseHandIK() const { return bUseHandIK;  };
+		FORCEINLINE bool ShouldUseHandIK() const { return bUseHandIK; };
 
 protected:
+	void SetState(EWeaponHoldingState NewState);
+
+	void DrawWeaponSight();
+
 	/*
 	* Instantiate the Starting Weapons and put them in the inventory.
 	*/
@@ -187,8 +215,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	void DeactivateHandIK() { bUseHandIK = false; };
-
-	void DetermineWeaponHandlerState();
 
 	/*
 	* Load all the Animation Montage Soft Reference in memory.
@@ -218,9 +244,6 @@ public:
 		AWeaponBase* GetPrimary() const { return PrimaryWeapon; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		AWeaponBase* GetSecondary() const { return SecondaryWeapon; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE FName GetWeaponInHandAttachPointOnCharacter() const { return WeaponAttachPointOnCharacter_Rifle; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -232,12 +255,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FVector GetWeaponHandSocketOwnerSpace(uint8 IsBackHand = 1) const;
 
+#pragma region CALLABLE_ACTIONS
 	/*
 	*
 	*/
-	void EquipPrimaryWeapon();
-
-	void EquipSecondaryWeapon();
+	UFUNCTION(BlueprintCallable)
+		void EquipPrimaryWeapon();
 
 	/*
 	* Start unequipping the weapon.
@@ -257,3 +280,4 @@ public:
 
 	void ReloadFinished();
 };
+#pragma endregion CALLABLE_ACTIONS

@@ -18,7 +18,7 @@ USTRUCT()
 struct FCharacterStats
 {
 	GENERATED_BODY();
-	
+
 	UPROPERTY(EditAnywhere)
 		float MaxHealth;
 
@@ -71,6 +71,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animations")
 		UAnimMontage* AM_DieFront;
 
+	/*
+	* Pitch applied for the Additive Aim Space.
+	* [-90; 90]
+	*/
+	float AimPitch;
+
+	FRotator PrevRotation;
+
+	/*
+	* Rotation that occured since last frame.
+	*/
+	FRotator DeltaRotator;
+
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE UWeaponHandlerComponent* GetWeaponHandlerComponent() const { return WeaponHandlerComponent; }
@@ -83,6 +96,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE UTpsCharacterMovementComponent* GetTpsCharacterMovementComponent() const { return TpsCharacterMovementComponent; }
+
+	/*
+	* Pitch applied for the Additive Aim Space.
+	* [-90; 90]
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FORCEINLINE float GetAimPitch() const { return AimPitch; }
 
 	/*
 	* Fast accessor for the equipped weapon.
@@ -111,8 +131,10 @@ public:
 	void OnHit(const AWeaponBase* HitInstigator) override;
 	/* End HitResponsive Interface */
 
-	void StartFire();
-	void StopFire();
+	UFUNCTION(BlueprintCallable)
+		void StartFire();
+	UFUNCTION(BlueprintCallable)
+		void StopFire();
 
 	void ReloadWeapon();
 
@@ -128,4 +150,5 @@ public:
 	void Die();
 
 	void EnableRagdoll();
+
 };

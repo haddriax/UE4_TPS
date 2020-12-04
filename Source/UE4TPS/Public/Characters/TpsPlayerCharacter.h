@@ -41,6 +41,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 		float BaseLookUpRate;
 
+
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -71,6 +72,8 @@ protected:
 	* @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	*/
 	void LookUpAtRate(float Rate);
+
+	FHitResult TraceFromCameraCenter();
 
 public:
 	// Called every frame
