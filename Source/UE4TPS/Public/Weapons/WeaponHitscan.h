@@ -25,11 +25,6 @@ struct FWeaponHitScanConfigs
 	UPROPERTY(EditDefaultsOnly, Category = HitScan)
 		float MaxRange;
 	/*
-	* Maximal amount of damage, dealt when <= OptimalRange.
-	*/
-	UPROPERTY(EditDefaultsOnly, Category = HitScan)
-		float OptimalDamage;
-	/*
 	* Minimal amount of damage, dealt when OptimalRange < Range <= MaxRange.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = HitScan)
@@ -39,8 +34,6 @@ struct FWeaponHitScanConfigs
 	{
 		OptimalRange = 60000.f;
 		MaxRange = 100000.f;
-		OptimalDamage = 10.f;
-		MinDamage = 2.f;
 	}
 };
 

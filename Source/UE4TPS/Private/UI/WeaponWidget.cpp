@@ -6,12 +6,13 @@
 #include "Components/TextBlock.h"
 
 #include "Characters/TpsPlayerCharacter.h"
-#include "Weapons/WeaponBase.h"
+#include "Weapons/ModularWeapon.h"
 
 void UWeaponWidget::UpdateWeaponDatas()
 {
 	if (DisplayedWeapon)
 	{
+		/*
 		if (WeaponNameText)
 		{
 			WeaponNameText->SetText(FText::FromString(DisplayedWeapon->GetName()));
@@ -48,6 +49,7 @@ void UWeaponWidget::UpdateWeaponDatas()
 			AmmunitionsInClipText->SetText(FText::FromString("0"));
 		}
 
+	*/
 	}
 
 }
@@ -56,6 +58,7 @@ UWeaponWidget::UWeaponWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 }
+
 void UWeaponWidget::NativePreConstruct()
 {
 	Super::NativePreConstruct();
@@ -65,8 +68,8 @@ void UWeaponWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	DisplayedWeapon = Character->GetEquippedWeapon();
-	UpdateWeaponDatas();
+	// DisplayedWeapon = Character->GetEquippedWeapon();
+	// UpdateWeaponDatas();
 
 }
 
@@ -74,8 +77,8 @@ void UWeaponWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	DisplayedWeapon = Character->GetEquippedWeapon();
-	UpdateWeaponDatas();
+	// DisplayedWeapon = Character->GetEquippedWeapon();
+	// UpdateWeaponDatas();
 }
 
 void UWeaponWidget::SynchronizeProperties()

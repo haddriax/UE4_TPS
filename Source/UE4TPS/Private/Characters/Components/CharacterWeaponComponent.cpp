@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/Components/WeaponHandlerComponent.h"
+#include "Characters/Components/CharacterWeaponComponent.h"
 
 #include "Containers/Array.h"
 #include "Kismet/GameplayStatics.h"
@@ -10,10 +10,11 @@
 
 #include "Characters/Controllers/TpsPlayerController.h"
 #include "Characters/TpsCharacterBase.h"
-#include "Weapons/WeaponBase.h"
+#include "Weapons/ModularWeapon.h"
+#include "Weapons/FireMode/WeaponFireModeComponent.h"
 
 // Sets default values for this component's properties
-UWeaponHandlerComponent::UWeaponHandlerComponent()
+UCharacterWeaponComponent::UCharacterWeaponComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -24,53 +25,53 @@ UWeaponHandlerComponent::UWeaponHandlerComponent()
 }
 
 // Called every frame
-void UWeaponHandlerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCharacterWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
 	DrawWeaponSight();
 }
 
-void UWeaponHandlerComponent::OnComponentCreated()
+void UCharacterWeaponComponent::OnComponentCreated()
 {
 	Super::OnComponentCreated();
 
 	SetState(EWeaponHoldingState::NoWeapon);
 }
 
-bool UWeaponHandlerComponent::IsEquippingAnyWeapon() const
+bool UCharacterWeaponComponent::IsEquippingAnyWeapon() const
 {
 	return (WeaponHoldingState == EWeaponHoldingState::EquippingPrimary);
 }
 
-bool UWeaponHandlerComponent::IsUnequippingAnyWeapon() const
+bool UCharacterWeaponComponent::IsUnequippingAnyWeapon() const
 {
 	return (WeaponHoldingState == EWeaponHoldingState::UnequippingPrimary);
 }
 
-bool UWeaponHandlerComponent::IsAnyWeaponEquipped() const
+bool UCharacterWeaponComponent::IsAnyWeaponEquipped() const
 {
 	return ((EquippedWeapon != nullptr) && (WeaponHoldingState != EWeaponHoldingState::UnequippingPrimary));
 }
 
-bool UWeaponHandlerComponent::IsPrimaryEquipped() const
+bool UCharacterWeaponComponent::IsPrimaryEquipped() const
 {
 	return (WeaponHoldingState == EWeaponHoldingState::PrimaryIdle);
 }
 
-bool UWeaponHandlerComponent::IsPendingReload() const
+bool UCharacterWeaponComponent::IsPendingReload() const
 {
 	return (WeaponHoldingState == EWeaponHoldingState::ReloadingPrimary);
 }
 
-bool UWeaponHandlerComponent::CanSwitchWeapon() const
+bool UCharacterWeaponComponent::CanSwitchWeapon() const
 {
 	return (!IsEquippingAnyWeapon())
 		&& (!IsUnequippingAnyWeapon())
 		&& (!IsPendingReload());
 }
 
-bool UWeaponHandlerComponent::CanReload() const
+bool UCharacterWeaponComponent::CanReload() const
 {
 	if (!GetEquippedWeapon())
 		return false;
@@ -81,7 +82,7 @@ bool UWeaponHandlerComponent::CanReload() const
 		&& (GetEquippedWeapon()->CanReload());
 }
 
-bool UWeaponHandlerComponent::AllowShooting() const
+bool UCharacterWeaponComponent::AllowShooting() const
 {
 	return (IsAnyWeaponEquipped())
 		&& (!IsPendingReload())
@@ -90,12 +91,12 @@ bool UWeaponHandlerComponent::AllowShooting() const
 		&& (GetEquippedWeapon()->CanFire());
 }
 
-void UWeaponHandlerComponent::SetState(EWeaponHoldingState NewState)
+void UCharacterWeaponComponent::SetState(EWeaponHoldingState NewState)
 {
 	WeaponHoldingState = NewState;
 }
 
-void UWeaponHandlerComponent::DrawWeaponSight()
+void UCharacterWeaponComponent::DrawWeaponSight()
 {
 	if (EquippedWeapon)
 	{
@@ -114,14 +115,14 @@ void UWeaponHandlerComponent::DrawWeaponSight()
 	}
 }
 
-void UWeaponHandlerComponent::PrepareStartingWeapons()
+void UCharacterWeaponComponent::PrepareStartingWeapons()
 {
 	// Spawn Primary.
 	if (!PrimaryStartingWeapon.IsNull())
 	{
-		TSubclassOf<AWeaponBase> WeaponClass = PrimaryStartingWeapon.LoadSynchronous();
+		TSubclassOf<AModularWeapon> WeaponClass = PrimaryStartingWeapon.LoadSynchronous();
 
-		AWeaponBase* WeaponWithDeferredSpawn = GetWorld()->SpawnActorDeferred<AWeaponBase>(WeaponClass,
+		AModularWeapon* WeaponWithDeferredSpawn = GetWorld()->SpawnActorDeferred<AModularWeapon>(WeaponClass,
 			FTransform::Identity,
 			GetOwner(),
 			CastChecked<APawn>(GetOwner()),
@@ -137,7 +138,7 @@ void UWeaponHandlerComponent::PrepareStartingWeapons()
 }
 
 // Called when the game starts
-void UWeaponHandlerComponent::BeginPlay()
+void UCharacterWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -151,13 +152,13 @@ void UWeaponHandlerComponent::BeginPlay()
 	PrepareStartingWeapons();
 }
 
-void UWeaponHandlerComponent::LoadAnimationMontages()
+void UCharacterWeaponComponent::LoadAnimationMontages()
 {
-	FireSingleWeaponAM = FireSingleWeaponSoftPtr.LoadSynchronous();
-	FireContinuousWeaponAM = FireContinuousWeaponSoftPtr.LoadSynchronous();
-	ReloadWeaponAM = ReloadWeaponSoftPtr.LoadSynchronous();
-	EquipWeaponAM = EquipWeaponSoftPtr.LoadSynchronous();
-	UnequipWeaponAM = UnequipWeaponSoftPtr.LoadSynchronous();
+	FireSingleWeaponSoftPtr.LoadSynchronous();
+	FireContinuousWeaponSoftPtr.LoadSynchronous();
+	ReloadWeaponSoftPtr.LoadSynchronous();
+	EquipWeaponSoftPtr.LoadSynchronous();
+	UnequipWeaponSoftPtr.LoadSynchronous();
 
 	/*
 	FireSingleWeaponAM->AddSlot("UpperBody");
@@ -170,33 +171,33 @@ void UWeaponHandlerComponent::LoadAnimationMontages()
 	RecoverMontageNotifications();
 }
 
-void UWeaponHandlerComponent::PlayShotMontageSingle()
+void UCharacterWeaponComponent::PlayShotMontageSingle()
 {
-	CharacterOwner->PlayAnimMontage(FireSingleWeaponAM);
+	CharacterOwner->PlayAnimMontage(FireSingleWeaponSoftPtr.Get());
 }
 
-void UWeaponHandlerComponent::TogglePlayShotMontageLoop()
+void UCharacterWeaponComponent::TogglePlayShotMontageLoop()
 {
 	if (bIsPlayingContinuousFireMontage)
 	{
-		CharacterOwner->StopAnimMontage(FireContinuousWeaponAM);
+		CharacterOwner->StopAnimMontage(FireContinuousWeaponSoftPtr.Get());
 	}
 	else
 	{
-		CharacterOwner->PlayAnimMontage(FireContinuousWeaponAM);
+		CharacterOwner->PlayAnimMontage(FireContinuousWeaponSoftPtr.Get());
 	}
 	
 	bIsPlayingContinuousFireMontage = !bIsPlayingContinuousFireMontage;
 	
 }
 
-void UWeaponHandlerComponent::RecoverMontageNotifications()
+void UCharacterWeaponComponent::RecoverMontageNotifications()
 {
 	TArray<FAnimNotifyEventReference> Notifies;
 
-	if (EquipWeaponAM)
+	if (EquipWeaponSoftPtr.Get())
 	{
-		EquipWeaponAM->GetAnimNotifies(0.0f, EquipWeaponAM->CalculateSequenceLength(), false, Notifies);
+		EquipWeaponSoftPtr.Get()->GetAnimNotifies(0.0f, EquipWeaponSoftPtr.Get()->CalculateSequenceLength(), false, Notifies);
 
 		for (FAnimNotifyEventReference Notification : Notifies)
 		{
@@ -209,9 +210,9 @@ void UWeaponHandlerComponent::RecoverMontageNotifications()
 	}
 	check(EquipWeapon_GrabWeaponTime >= 0.0f);
 
-	if (UnequipWeaponAM)
+	if (UnequipWeaponSoftPtr.Get())
 	{
-		UnequipWeaponAM->GetAnimNotifies(0.0f, UnequipWeaponAM->CalculateSequenceLength(), false, Notifies);
+		UnequipWeaponSoftPtr.Get()->GetAnimNotifies(0.0f, UnequipWeaponSoftPtr.Get()->CalculateSequenceLength(), false, Notifies);
 		for (FAnimNotifyEventReference Notification : Notifies)
 		{
 			if (Notification.GetNotify()->GetNotifyEventName() == FName("AnimNotify_ReleaseWeapon"))
@@ -224,7 +225,7 @@ void UWeaponHandlerComponent::RecoverMontageNotifications()
 	check(UnequipWeapon_ReleaseWeaponTime >= 0.0f);
 }
 
-bool UWeaponHandlerComponent::EquipWeapon(AWeaponBase* WeaponToEquip)
+bool UCharacterWeaponComponent::EquipWeapon(AModularWeapon* WeaponToEquip)
 {
 	if (!IsValid(WeaponToEquip))
 	{
@@ -253,7 +254,7 @@ bool UWeaponHandlerComponent::EquipWeapon(AWeaponBase* WeaponToEquip)
 	UnequipWeapon();
 
 	ATpsCharacterBase* Owner = CastChecked<ATpsCharacterBase>(GetOwner());
-	Owner->PlayAnimMontage(EquipWeaponAM);
+	Owner->PlayAnimMontage(EquipWeaponSoftPtr.Get());
 
 	WeaponToEquip->EquipOn(Owner);
 	OnEquipWeapon.Broadcast(WeaponToEquip);
@@ -271,8 +272,8 @@ bool UWeaponHandlerComponent::EquipWeapon(AWeaponBase* WeaponToEquip)
 	GetOwner()->GetWorldTimerManager().SetTimer(
 		TimerHandle_WeaponAction,
 		this,
-		&UWeaponHandlerComponent::EquipFinished,
-		EquipWeaponAM->GetPlayLength(),
+		&UCharacterWeaponComponent::EquipFinished,
+		EquipWeaponSoftPtr.Get()->GetPlayLength(),
 		false
 	);
 
@@ -284,7 +285,7 @@ bool UWeaponHandlerComponent::EquipWeapon(AWeaponBase* WeaponToEquip)
 	return true;
 }
 
-void UWeaponHandlerComponent::AttachToPawnHand(AWeaponBase* Weapon)
+void UCharacterWeaponComponent::AttachToPawnHand(AModularWeapon* Weapon)
 {
 	// Attach the weapon to the player socket.
 	ATpsCharacterBase* Owner = Cast<ATpsCharacterBase>(GetOwner());
@@ -299,7 +300,7 @@ void UWeaponHandlerComponent::AttachToPawnHand(AWeaponBase* Weapon)
 	Weapon->AttachToComponent(Owner->GetMesh(), attachmentTransformRules, Owner->GetWeaponInHandAttachPointOnCharacter());
 }
 
-void UWeaponHandlerComponent::AttachToPawnHoslterSlot(AWeaponBase* Weapon)
+void UCharacterWeaponComponent::AttachToPawnHoslterSlot(AModularWeapon* Weapon)
 {
 	bool AttachSucceed = false;
 
@@ -325,7 +326,7 @@ void UWeaponHandlerComponent::AttachToPawnHoslterSlot(AWeaponBase* Weapon)
 }
 
 
-FVector UWeaponHandlerComponent::GetWeaponHandSocketOwnerSpace(uint8 IsBackHand) const
+FVector UCharacterWeaponComponent::GetWeaponHandSocketOwnerSpace(uint8 IsBackHand) const
 {
 	if (EquippedWeapon == nullptr)
 	{
@@ -358,7 +359,7 @@ FVector UWeaponHandlerComponent::GetWeaponHandSocketOwnerSpace(uint8 IsBackHand)
 	return SocketLocation_WeaponSpace + GetOwner()->GetActorTransform().InverseTransformPosition(EquippedWeapon->GetActorLocation());
 }
 
-void UWeaponHandlerComponent::EquipPrimaryWeapon()
+void UCharacterWeaponComponent::EquipPrimaryWeapon()
 {
 	if (CanSwitchWeapon())
 	{
@@ -373,7 +374,7 @@ void UWeaponHandlerComponent::EquipPrimaryWeapon()
 	}	
 }
 
-void UWeaponHandlerComponent::UnequipWeapon()
+void UCharacterWeaponComponent::UnequipWeapon()
 {
 	bUseHandIK = false;
 
@@ -402,21 +403,21 @@ void UWeaponHandlerComponent::UnequipWeapon()
 		GetOwner()->GetWorldTimerManager().SetTimer(TimerHandle, TimerDel, UnequipWeapon_ReleaseWeaponTime, false);
 
 		ATpsCharacterBase* Owner = CastChecked<ATpsCharacterBase>(GetOwner());
-		Owner->PlayAnimMontage(UnequipWeaponAM);
+		Owner->PlayAnimMontage(UnequipWeaponSoftPtr.Get());
 
 
 		// Start timer for OnUnequipFinisehd.
 		GetOwner()->GetWorldTimerManager().SetTimer(
 			TimerHandle_WeaponAction,
 			this,
-			&UWeaponHandlerComponent::UnequipFinished,
-			UnequipWeaponAM->GetPlayLength(),
+			&UCharacterWeaponComponent::UnequipFinished,
+			UnequipWeaponSoftPtr.Get()->GetPlayLength(),
 			false
 		);
 	}
 }
 
-void UWeaponHandlerComponent::EquipFinished()
+void UCharacterWeaponComponent::EquipFinished()
 {
 	EquippedWeapon->EquipFinished();
 	OnEquipWeaponFinished.Broadcast(EquippedWeapon);
@@ -432,20 +433,19 @@ void UWeaponHandlerComponent::EquipFinished()
 		SetState(EWeaponHoldingState::Undefined);
 	}
 
-	if (EquippedWeapon->GetWeaponDatas().bIsAutomaticWeapon)
+	// EquippedWeapon->OnFireStart.AddUObject(this, &UCharacterWeaponComponent::TogglePlayShotMontageLoop);
+	// EquippedWeapon->OnFireStop.AddUObject(this, &UCharacterWeaponComponent::TogglePlayShotMontageLoop);
+
+	for (UWeaponFireModeComponent* Mode : EquippedWeapon->GetFireModes())
 	{
-		EquippedWeapon->OnFireStart.AddUObject(this, &UWeaponHandlerComponent::TogglePlayShotMontageLoop);
-		EquippedWeapon->OnFireStop.AddUObject(this, &UWeaponHandlerComponent::TogglePlayShotMontageLoop);
-	}
-	else
-	{
-		EquippedWeapon->OnShot.AddUObject(this, &UWeaponHandlerComponent::PlayShotMontageSingle);
+		Mode->OnFireStart.AddUObject(this, &UCharacterWeaponComponent::TogglePlayShotMontageLoop);
+		Mode->OnFireStop.AddUObject(this, &UCharacterWeaponComponent::TogglePlayShotMontageLoop);
 	}
 
 	bUseHandIK = true;
 }
 
-void UWeaponHandlerComponent::UnequipFinished()
+void UCharacterWeaponComponent::UnequipFinished()
 {
 	if (EquippedWeapon)
 	{
@@ -454,15 +454,22 @@ void UWeaponHandlerComponent::UnequipFinished()
 
 		SetState(EWeaponHoldingState::NoWeapon);
 
-		EquippedWeapon->OnShot.RemoveAll(this); 
-		EquippedWeapon->OnFireStart.RemoveAll(this);
-		EquippedWeapon->OnFireStop.RemoveAll(this);
+		// EquippedWeapon->OnShot.RemoveAll(this); 
+		// EquippedWeapon->OnFireStart.RemoveAll(this);
+		// EquippedWeapon->OnFireStop.RemoveAll(this); 
+
+		for (UWeaponFireModeComponent* Mode : EquippedWeapon->GetFireModes())
+		{
+			Mode->OnShot.RemoveAll(this);
+			Mode->OnFireStart.RemoveAll(this);
+			Mode->OnFireStop.RemoveAll(this);
+		}
 
 		EquippedWeapon = nullptr;
 	}
 }
 
-void UWeaponHandlerComponent::Reload()
+void UCharacterWeaponComponent::Reload()
 {
 	if (!CanReload())
 	{
@@ -477,18 +484,18 @@ void UWeaponHandlerComponent::Reload()
 
 			// Play the reload animation on the owner.
 			ATpsCharacterBase* Owner = CastChecked<ATpsCharacterBase>(GetOwner());
-			float AnimDuration = Owner->PlayAnimMontage(ReloadWeaponAM);
+			float AnimDuration = Owner->PlayAnimMontage(ReloadWeaponSoftPtr.Get());
 
 			SetState(EWeaponHoldingState::ReloadingPrimary);
 
-			// Reload base on the anim duration.
+			// Reload based on the anim duration.
 			EquippedWeapon->Reload(AnimDuration);
 
 			// Start timer for ReloadFinisehd.
 			GetOwner()->GetWorldTimerManager().SetTimer(
 				TimerHandle_WeaponAction,
 				this,
-				&UWeaponHandlerComponent::ReloadFinished,
+				&UCharacterWeaponComponent::ReloadFinished,
 				AnimDuration,
 				false
 			);
@@ -496,7 +503,7 @@ void UWeaponHandlerComponent::Reload()
 	}
 }
 
-void UWeaponHandlerComponent::ReloadFinished()
+void UCharacterWeaponComponent::ReloadFinished()
 {
 	SetState(EWeaponHoldingState::PrimaryIdle);
 

@@ -8,7 +8,7 @@
 #include "Components/AudioComponent.h"
 #include "Sound/SoundCue.h"
 
-#include "Weapons/WeaponBase.h"
+#include "Weapons/ModularWeapon.h"
 #include "Characters/TpsCharacterBase.h"
 
 // Sets default values for this component's properties
@@ -98,18 +98,6 @@ void UWeaponFeedbacksComponent::PlayWeaponReloadAnimation()
 	PlayWeaponAnimation(WeaponReloadFull_Anim);
 }
 
-void UWeaponFeedbacksComponent::PlayCameraShake()
-{
-	if (FireCameraShake)
-	{
-		APlayerController* playerController = Cast<APlayerController>(OwningWeapon->GetParentCharacter()->GetController());
-
-		check(playerController != nullptr);
-
-		playerController->ClientPlayCameraShake(FireCameraShake);
-	}
-}
-
 void UWeaponFeedbacksComponent::StopFireSound()
 {
 	if (FireSpawnedAudioComponent)
@@ -137,7 +125,7 @@ void UWeaponFeedbacksComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwningWeapon = Cast<AWeaponBase>(GetOwner());
+	OwningWeapon = Cast<AModularWeapon>(GetOwner());
 }
 
 
@@ -158,7 +146,6 @@ void UWeaponFeedbacksComponent::SimulateWeaponFiring()
 {
 	PlayFireSound(bLoopedFireSound);
 	PlayMuzzleFlashFX();
-	PlayCameraShake();
 }
 
 void UWeaponFeedbacksComponent::StopSimulatingWeaponFiring()
@@ -181,7 +168,7 @@ void UWeaponFeedbacksComponent::SimulateLowerWeapon()
 	PlayLowerWeaponSound();
 }
 
-AWeaponBase* UWeaponFeedbacksComponent::GetOwningWeapon() const
+AModularWeapon* UWeaponFeedbacksComponent::GetOwningWeapon() const
 {
 	check(OwningWeapon);
 

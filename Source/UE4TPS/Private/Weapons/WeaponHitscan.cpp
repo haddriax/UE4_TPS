@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Weapons/WeaponHitscan.h"
 
 #include "Characters/TpsCharacterBase.h"
@@ -36,7 +35,7 @@ void AWeaponHitscan::FireWeapon()
 
 	FHitscanHit hit;
 
-	// Ignore self and the holder for linetrace.
+	// Ignore self and the holder for Linetrace.
 	ColQueryParams.AddIgnoredActor(this->GetUniqueID());
 	ColQueryParams.AddIgnoredActor(GetParentCharacter()->GetUniqueID());
 

@@ -6,7 +6,7 @@
 #include "DrawDebugHelpers.h"
 
 #include "Characters/TpsCharacterBase.h"
-#include "Characters/Components/WeaponHandlerComponent.h"
+#include "Characters/Components/CharacterWeaponComponent.h"
 
 
 UTpsCharacterMovementComponent::UTpsCharacterMovementComponent()
@@ -35,12 +35,12 @@ UTpsCharacterMovementComponent::UTpsCharacterMovementComponent()
 	RotationRate = FRotator(0, 300, 0);
 }
 
-void UTpsCharacterMovementComponent::OnWeaponEquipped(AWeaponBase* NewlyEquippedWeapon)
+void UTpsCharacterMovementComponent::OnWeaponEquipped(AModularWeapon* NewlyEquippedWeapon)
 {
 	EnableCombatMode();
 }
 
-void UTpsCharacterMovementComponent::OnWeaponUnequipped(AWeaponBase* NewlyEquippedWeapon)
+void UTpsCharacterMovementComponent::OnWeaponUnequipped(AModularWeapon* NewlyEquippedWeapon)
 {
 	EnableTravelMode();
 }
@@ -66,6 +66,8 @@ void UTpsCharacterMovementComponent::BeginPlay()
 
 void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	RotationRate =  Velocity.SizeSquared() > 0 ? FRotator(0, 1500, 0) : FRotator(0, 300, 0);
+
 	FRotator r = FQuat::FindBetweenNormals(CharacterOwner->GetActorForwardVector(), Velocity.GetSafeNormal()).Rotator();
 
 	FrameYawDelta = GetLastUpdateRotation().Yaw - GetOwner()->GetActorRotation().Yaw;

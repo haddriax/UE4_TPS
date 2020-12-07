@@ -7,7 +7,7 @@
 
 #include "HitResponsiveInterface.generated.h"
 
-class AWeaponBase;
+class AModularWeapon;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -30,5 +30,5 @@ public:
 	* Called whenever the actor is hit by a weapon shot.
 	*/
 	UFUNCTION()
-	virtual void OnHit(const AWeaponBase* HitInstigator);
+	virtual void OnHit(const AModularWeapon* HitInstigator);
 };

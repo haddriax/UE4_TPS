@@ -8,7 +8,7 @@
 #include "TpsCharacterMovementComponent.generated.h"
 
 class ATpsCharacterBase;
-class AWeaponBase;
+class AModularWeapon;
 
 UENUM(BlueprintType)
 enum class ECustomMovementMode : uint8
@@ -181,13 +181,13 @@ protected:
 	* Switch animations set if a weapon is equipped. Start Combat Mode. Called by Event.
 	*/
 	UFUNCTION()
-		void OnWeaponEquipped(AWeaponBase* NewlyEquippedWeapon);
+		void OnWeaponEquipped(AModularWeapon* NewlyEquippedWeapon);
 
 	/*
 	* Switch animations set if a weapon is equipped. Start Travel Mode. Called by Event.
 	*/
 	UFUNCTION()
-		void OnWeaponUnequipped(AWeaponBase* NewlyEquippedWeapon);
+		void OnWeaponUnequipped(AModularWeapon* NewlyEquippedWeapon);
 
 	/*
 	* Subscribe this object methods to WeaponHandlerComponent Events. Called once in Begin Play.

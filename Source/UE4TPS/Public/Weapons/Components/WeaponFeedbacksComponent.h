@@ -6,14 +6,13 @@
 #include "Components/ActorComponent.h"
 #include "WeaponFeedbacksComponent.generated.h"
 
-class AWeaponBase;
+class AModularWeapon;
 class UAnimMontage;
 class USoundCue;
 class UAudioComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
 class UMaterial;
-class UCameraShake;
 
 USTRUCT()
 struct FImpactDecalDatas
@@ -41,7 +40,7 @@ class UE4TPS_API UWeaponFeedbacksComponent : public UActorComponent
 private:
 
 protected:
-	AWeaponBase* OwningWeapon = nullptr;
+	AModularWeapon* OwningWeapon = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Particles")
 		UParticleSystem* MuzzleFlashFX = nullptr;
@@ -73,9 +72,6 @@ protected:
 
 	bool bIsPlayingFireAnimation = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Feedbacks")
-		TSubclassOf<UCameraShake> FireCameraShake = NULL;
-
 	UPROPERTY(VisibleAnywhere, Transient, Category = "Weapon|SpawnedComponents")
 		UAudioComponent* FireSpawnedAudioComponent = nullptr;
 
@@ -95,8 +91,6 @@ private:
 
 	void PlayWeaponAnimation(UAnimMontage* Animation);
 	void PlayWeaponReloadAnimation();
-
-	void PlayCameraShake();
 
 	void StopFireSound();
 
@@ -125,5 +119,5 @@ public:
 	void SimulateRaiseWeapon();
 	void SimulateLowerWeapon();
 
-	AWeaponBase* GetOwningWeapon() const;
+	AModularWeapon* GetOwningWeapon() const;
 };

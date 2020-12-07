@@ -8,8 +8,8 @@
 #include "UObject/ConstructorHelpers.h"
 
 #include "Characters/TpsPlayerCharacter.h"
-#include "Characters/Components/WeaponHandlerComponent.h"
-#include "Weapons/WeaponBase.h"
+#include "Characters/Components/CharacterWeaponComponent.h"
+#include "Weapons/ModularWeapon.h"
 
 ATpsHUD::ATpsHUD()
 {

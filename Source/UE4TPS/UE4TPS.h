@@ -8,8 +8,8 @@
 
 #include "Characters/TpsCharacterBase.h"
 #include "Characters/Controllers/TpsPlayerController.h"
-#include "Characters/Components/WeaponHandlerComponent.h"
-#include "Weapons/WeaponBase.h"
+#include "Characters/Components/CharacterWeaponComponent.h"
+#include "Weapons/ModularWeapon.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTPS, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogTpsWeapon, Log, All);

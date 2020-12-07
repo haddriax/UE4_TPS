@@ -9,7 +9,8 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#include "Characters/Components/WeaponHandlerComponent.h"
+// #include "Characters/Components/WeaponHandlerComponent.h
+#include "Characters/Components/CharacterWeaponComponent.h"
 #include "Characters/Components/TpsCharacterMovementComponent.h"
 #include "UI/WeaponWidget.h"
 
@@ -41,6 +42,8 @@ ATpsPlayerCharacter::ATpsPlayerCharacter(const FObjectInitializer& ObjectInitial
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bIgnoreBaseRotation = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+	bIsPlayer = true;
 }
 
 void ATpsPlayerCharacter::BeginPlay()
@@ -52,6 +55,7 @@ void ATpsPlayerCharacter::BeginPlay()
 	check(PC);
 
 	// Create and add the weapon widget.
+	/*
 	WeaponUI = CreateWidget<UWeaponWidget>(PC, WeaponUIClass);
 	if (WeaponUI)
 	{
@@ -60,6 +64,7 @@ void ATpsPlayerCharacter::BeginPlay()
 		PC->SetInputMode(Mode);
 		WeaponUI->AddToViewport(32);
 	}
+	*/
 
 	// CastChecked<APlayerController>(GetController())->ClientSetCameraFade
 
@@ -198,8 +203,8 @@ void ATpsPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	// PlayerInputComponent->BindAction("Aim", IE_Pressed, TpsCharacterStatesComponent, &UTpsCharacterStatesComponent::TryAiming);
 	// PlayerInputComponent->BindAction("Aim", IE_Released, TpsCharacterStatesComponent, &UTpsCharacterStatesComponent::StopTryingAiming);
 
-	PlayerInputComponent->BindAction("EquipWeapon", IE_Pressed, WeaponHandlerComponent, &UWeaponHandlerComponent::EquipPrimaryWeapon);
-	PlayerInputComponent->BindAction("ReloadWeapon", IE_Pressed, WeaponHandlerComponent, &UWeaponHandlerComponent::Reload);
+	PlayerInputComponent->BindAction("EquipWeapon", IE_Pressed, WeaponHandlerComponent, &UCharacterWeaponComponent::EquipPrimaryWeapon);
+	PlayerInputComponent->BindAction("ReloadWeapon", IE_Pressed, WeaponHandlerComponent, &UCharacterWeaponComponent::Reload);
 
 	// PlayerInputComponent->BindAction("CombatMode", IE_Pressed, WeaponHandlerComponent, &UWeaponHandlerComponent::ManageWeaponHolding);
 

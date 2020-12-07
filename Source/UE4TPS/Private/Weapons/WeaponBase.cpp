@@ -19,7 +19,13 @@ AWeaponBase::AWeaponBase()
 
 	SetRootComponent(WeaponMesh);
 
-	WeaponFeedbacksComponent = CreateDefaultSubobject<UWeaponFeedbacksComponent>("WeaponFeedbacks");
+	WeaponRightHandSocketName = "socket_hand_right";
+	WeaponLeftHandSocketName = "socket_hand_left";
+	MuzzleFX_SocketName = "MuzzleSocket";
+	MuzzleTrace_SocketName = "MuzzleSocket";
+	MuzzleDirection_SocketName = "MuzzleDirectionSocket";
+
+	WeaponFeedbacksComponent = CreateDefaultSubobject<UWeaponFeedbacksComponent>("WeaponFeedbacks");	
 }
 
 void AWeaponBase::PostInitializeComponents()
@@ -171,13 +177,11 @@ void AWeaponBase::HandleFiring()
 
 		FireWeapon();
 
-		GEngine->AddOnScreenDebugMessage(64, 10.0f, FColor::Blue, FString::SanitizeFloat(GetTimeBetweenShots()));
-		GEngine->AddOnScreenDebugMessage(64, 10.0f, FColor::Red, FString::SanitizeFloat(IsFiring()));
-
 		// Handle Refiring.
-		bRefiring = 
+		bRefiring =
 			IsFiring()
 			&& GetTimeBetweenShots() > 0.0f
+			&& CanFire()
 			&& WeaponDatas.bIsAutomaticWeapon;
 
 		// Broadcast the OnShot Event.
@@ -199,6 +203,7 @@ void AWeaponBase::HandleFiring()
 		{
 			SetWeaponState(EWeaponState::Idle);
 		}
+
 	}
 	// Can't shoot in the middle of a burst.
 	else if (BurstCounter > 0)
@@ -257,7 +262,7 @@ void AWeaponBase::SetWeaponState(EWeaponState NewState)
 
 		if (OnFireStop.IsBound())
 		{
-			OnFireStop.Execute();
+			OnFireStop.Broadcast();
 		}
 	}
 
@@ -268,7 +273,7 @@ void AWeaponBase::SetWeaponState(EWeaponState NewState)
 
 		if (OnFireStart.IsBound())
 		{
-			OnFireStart.Execute();
+			OnFireStart.Broadcast();
 		}
 	}
 }
@@ -392,7 +397,7 @@ void AWeaponBase::Reload(float ReloadDuration)
 
 void AWeaponBase::OnReloadFinished()
 {
-	int32 addToClip = GetAmmuntionsFromReserve(GetMissingAmmoInClip());
+	const int32 addToClip = GetAmmuntionsFromReserve(GetMissingAmmoInClip());
 
 	AddAmmuntionsInClip(addToClip);
 

@@ -7,33 +7,34 @@
 
 #include "../../GameTypes.h"
 
-#include "WeaponHandlerComponent.generated.h"
+#include "CharacterWeaponComponent.generated.h"
 
-class AWeaponBase;
+class AModularWeapon;
 class ATpsCharacterBase;
+class UAnimMontage;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class UE4TPS_API UWeaponHandlerComponent : public UActorComponent
+class UE4TPS_API UCharacterWeaponComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipWeapon, AWeaponBase*, Weapon);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipWeapon, AModularWeapon*, Weapon);
 
 	UPROPERTY(BlueprintAssignable)
 		FOnEquipWeapon OnEquipWeapon;
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnequipWeapon, AWeaponBase*, Weapon);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnequipWeapon, AModularWeapon*, Weapon);
 
 	UPROPERTY(BlueprintAssignable)
 		FOnUnequipWeapon OnUnequipWeapon;
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipWeaponFinished, AWeaponBase*, Weapon);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipWeaponFinished, AModularWeapon*, Weapon);
 
 	UPROPERTY(BlueprintAssignable)
 		FOnEquipWeaponFinished OnEquipWeaponFinished;
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnequipFinished, AWeaponBase*, Weapon);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnequipFinished, AModularWeapon*, Weapon);
 
 	UPROPERTY(BlueprintAssignable)
 		FOnUnequipFinished OnUnequipWeaponFinished;
@@ -55,12 +56,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 		TSoftObjectPtr<UAnimMontage> UnequipWeaponSoftPtr = nullptr;
 
-	UAnimMontage* UnequipWeaponAM = nullptr;
-	UAnimMontage* EquipWeaponAM = nullptr;
-	UAnimMontage* ReloadWeaponAM = nullptr;
-	UAnimMontage* FireContinuousWeaponAM = nullptr;
-	UAnimMontage* FireSingleWeaponAM = nullptr;
-
 	/*
 	* The time after starting the EquipWeaponAM animation when the weapon must be attached to the socket.
 	* Computed from the "GrabWeapon" AnimNotify.
@@ -69,7 +64,7 @@ protected:
 
 	/*
 	* The time after starting the UnequipWeaponeWeaponAM animation when the weapon must be attached to the socket.
-	* Computed from the "UnequipWeaponeWeaponAM" AnimNotify.
+	* Computed from the "UnequipWeapon" AnimNotify.
 	*/
 	float UnequipWeapon_ReleaseWeaponTime = -1.0f;
 
@@ -104,16 +99,16 @@ protected:
 		FName HolsterWeaponAttachPointOnCharacter_Rifle = FName("RifleHolsterSocket");
 
 	UPROPERTY(EditDefaultsOnly)
-		TSoftClassPtr<AWeaponBase> PrimaryStartingWeapon;
+		TSoftClassPtr<AModularWeapon> PrimaryStartingWeapon;
 
 	/*
 	*
 	*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		AWeaponBase* PrimaryWeapon = nullptr;
+		AModularWeapon* PrimaryWeapon = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		AWeaponBase* EquippedWeapon = nullptr;
+		AModularWeapon* EquippedWeapon = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		EWeaponHoldingState WeaponHoldingState;
@@ -130,7 +125,7 @@ protected:
 
 public:
 	// Sets default values for this component's properties.
-	UWeaponHandlerComponent();
+	UCharacterWeaponComponent();
 
 	// Called every frame.
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -221,19 +216,19 @@ protected:
 	*/
 	void RecoverMontageNotifications();
 
-	bool EquipWeapon(AWeaponBase* WeaponToEquip);
+	bool EquipWeapon(AModularWeapon* WeaponToEquip);
 
 
-	void AttachToPawnHand(AWeaponBase* Weapon);
+	void AttachToPawnHand(AModularWeapon* Weapon);
 
-	void AttachToPawnHoslterSlot(AWeaponBase* Weapon);
+	void AttachToPawnHoslterSlot(AModularWeapon* Weapon);
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		AWeaponBase* GetEquippedWeapon() const { return EquippedWeapon; }
+		AModularWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		AWeaponBase* GetPrimary() const { return PrimaryWeapon; }
+		AModularWeapon* GetPrimary() const { return PrimaryWeapon; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE FName GetWeaponInHandAttachPointOnCharacter() const { return WeaponAttachPointOnCharacter_Rifle; }

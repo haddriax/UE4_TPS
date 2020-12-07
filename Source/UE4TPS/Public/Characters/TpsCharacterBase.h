@@ -10,7 +10,8 @@
 #include "TpsCharacterBase.generated.h"
 
 class UIK_LegsComponent;
-class UWeaponHandlerComponent;
+// class UWeaponHandlerComponent;
+class UCharacterWeaponComponent;
 class UTpsCharacterMovementComponent;
 class UTpsCharacterStatesComponent;
 
@@ -56,8 +57,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "IK", meta = (AllowPrivateAccess = "true"))
 		UIK_LegsComponent* IK_LegsComponent;
 
+	/*
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 		UWeaponHandlerComponent* WeaponHandlerComponent;
+	*/
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
+		UCharacterWeaponComponent* WeaponHandlerComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 		UTpsCharacterMovementComponent* TpsCharacterMovementComponent;
@@ -90,9 +96,11 @@ protected:
 	*/
 	FRotator DeltaRotator;
 
+	uint8 bIsPlayer;
+
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		FORCEINLINE UWeaponHandlerComponent* GetWeaponHandlerComponent() const { return WeaponHandlerComponent; }
+		FORCEINLINE UCharacterWeaponComponent* GetWeaponHandlerComponent() const { return WeaponHandlerComponent; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE FName GetWeaponInHandAttachPointOnCharacter() const { return WeaponAttachPointOnCharacter_Rifle; }
@@ -122,7 +130,7 @@ public:
 	* Fast accessor for the equipped weapon.
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		AWeaponBase* GetEquippedWeapon() const;
+		AModularWeapon* GetEquippedWeapon() const;
 
 	// Sets default values for this character's properties
 	ATpsCharacterBase(const FObjectInitializer& ObjectInitializer);
@@ -142,7 +150,7 @@ public:
 	void StopAnimMontage(class UAnimMontage* AnimMontage) override;
 
 	/** Begin implementation : HitResponsive Interface */
-	void OnHit(const AWeaponBase* HitInstigator) override;
+	void OnHit(const AModularWeapon* HitInstigator) override;
 	/* End HitResponsive Interface */
 
 	UFUNCTION(BlueprintCallable)

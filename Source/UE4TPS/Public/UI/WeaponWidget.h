@@ -6,7 +6,7 @@
 #include "UI/PlayerBaseWidget.h"
 #include "WeaponWidget.generated.h"
 
-class AWeaponBase;
+class AModularWeapon;
 
 class UTextBlock;
 class UImage;
@@ -20,7 +20,7 @@ class UE4TPS_API UWeaponWidget : public UPlayerBaseWidget
 	GENERATED_BODY()
 
 protected:
-	AWeaponBase* DisplayedWeapon = nullptr;
+	AModularWeapon* DisplayedWeapon = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UTextBlock* WeaponNameText;

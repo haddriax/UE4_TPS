@@ -7,7 +7,7 @@
 
 #include "../GameTypes.h"
 
-#include "WeaponBase.generated.h"
+#include "ModularWeapon.generated.h"
 
 class UAnimMontage;
 class USoundCue;
@@ -19,11 +19,13 @@ class ATpsCharacterBase;
 
 class UWeaponFeedbacksComponent;
 
+class UWeaponFireModeComponent;
+
 /*
 * Struct used to hold the static datas from this weapon.
 */
 USTRUCT(BlueprintType)
-struct FWeaponDatas
+struct FModularWeaponDatas
 {
 	GENERATED_BODY();
 
@@ -116,7 +118,7 @@ struct FWeaponDatas
 	/*
 	* Defaults values.
 	*/
-	FWeaponDatas()
+	FModularWeaponDatas()
 	{
 		AmmunitionsPerClip = 30;
 		InitialClips = 4;
@@ -135,21 +137,15 @@ struct FWeaponDatas
 
 /**
  * Base class for any usable weapon.
+ * Fire behaviors are created by addung child classes of UWeaponFireModeComponent.
  */
 UCLASS(Abstract, BlueprintType)
-class UE4TPS_API AWeaponBase : public AActor
+class UE4TPS_API AModularWeapon : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	DECLARE_MULTICAST_DELEGATE(FOnFireStop);
-	FOnFireStop OnFireStop;
 
-	DECLARE_MULTICAST_DELEGATE(FOnFireStart);
-	FOnFireStart OnFireStart;
-
-	DECLARE_MULTICAST_DELEGATE(FOnShot);
-	FOnShot OnShot;
 
 private:
 
@@ -159,12 +155,16 @@ private:
 	ATpsCharacterBase* ParentCharacter = nullptr;
 
 protected:
-	UPROPERTY(VisibleAnywhere)
-		UWeaponFeedbacksComponent* WeaponFeedbacksComponent;
+	// UPROPERTY(VisibleAnywhere, Category = "Weapon")
+		// UWeaponFeedbacksComponent* WeaponFeedbacksComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 		USkeletalMeshComponent* WeaponMesh;
 
+	UPROPERTY(VisibleAnywhere, Instanced, BlueprintReadWrite, Transient, Category = "Weapon")
+		TArray<UWeaponFireModeComponent*> FireModes;
+
+	int32 ActiveFireMode = 0;
 
 /**
 * Convert those properties to Static, since they are the same for every weapon ?
@@ -191,40 +191,22 @@ protected:
 
 	bool bIsPlayingFireAnimation = false;
 
-	/*
-	* Amount of bullet shot this burst (while Fire order is maintained).
-	*/
-	int32 BurstCounter = 0;
-
-	/*
-	* Game Time when the last bullet was fired. Used for the Fire timer.
-	*/
-	float LastFireTime = 0.0f;
-
-	/*
-	* Time between each shot. Computed from the RateOfFire in WeaponDatas.
-	*/
-	float TimeBetweenShots = 1.0f;
-
-	/*
-	* Current Accuracy modifier, from 0 to 1 where 0 is the weapon best accuracy, 1 is the weapon worst accuracy.
-	*/
-	float CurrentSpread = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Weapon")
-		int32 AmmunitionsReserve = 0;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Weapon")
-		int32 AmmunitionsInClip = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		EWeaponState CurrentState;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Configs")
-		FWeaponDatas WeaponDatas;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		EWeaponType WeaponType = EWeaponType::Rifle;
 
-	// Timers Handle
-	FTimerHandle TimerHandle_HandleFiring;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		EWeaponSlot WeaponSlot = EWeaponSlot::Rifle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		EAmmoType AmmunitionsUsed = EAmmoType::Rifle;
+
+	/*
+	* Timer for Reloading/Equipping/Unequipping/etc...
+	*/
 	FTimerHandle TimerHandle_WeaponAction;
 
 public:
@@ -244,13 +226,13 @@ public:
 		FORCEINLINE FName GetShotDirectionSocketName() const { return WeaponLeftHandSocketName; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		FORCEINLINE FWeaponDatas const& GetWeaponDatas() const { return WeaponDatas; }
+		FORCEINLINE FName GetMuzzleFX_SocketName() const { return MuzzleFX_SocketName; }
 
 	/*
 	* Return the type of slot this weapon is using to be holstered.
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		FORCEINLINE EWeaponSlot GetWeaponSlot() const { return WeaponDatas.WeaponSlot; }
+		FORCEINLINE EWeaponSlot GetWeaponSlot() const { return WeaponSlot; }
 
 	/*
 	*Return the type of slot this weapon is using to be holstered.
@@ -258,10 +240,13 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE EWeaponState GetWeaponState() const { return CurrentState; }
 
+	/*
+	* Return the FireModes array.
+	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		FORCEINLINE float GetDamage() const { return WeaponDatas.Damage; }
+		FORCEINLINE TArray<UWeaponFireModeComponent*> GetFireModes() const { return FireModes; }
 
-	AWeaponBase();
+	AModularWeapon();
 
 	virtual void PostInitializeComponents() override;
 
@@ -296,41 +281,6 @@ protected:
 	UFUNCTION()
 		void DetachFromPawn();
 
-	/*
-	* Manage timer for shots.
-	*/
-	void OnBurstStarted();
-
-	/*
-	* After a burst.
-	*/
-	void OnBurstEnded();
-
-	/*
-	* Weapon in world effect implementation. Must be overridden by WeaponBase child classes.
-	*/
-	virtual void FireWeapon();
-
-	/*
-	* Called on each shot of a burst.
-	*/
-	void HandleFiring();
-
-	/*
-	* Called before HandleFiring for consecutive shots of a burst.
-	*/
-	void HandleRefiring();
-
-	/*
-	* Given a Direction and two angle, rotate this direction randomly in a cone.
-	* @param IN/OUT FVector : The initial direction we want to randomize.
-	* @param float : Horizontal angle used to delimited the cone, in degrees.
-	* @param float : Vertical angle used to delimited the cone, in degrees.
-	* @param bool : Are the specified angles in radiant or degrees ?
-	* @return int32 : The RandomSeed used to get generate the new direction.
-	*/
-	int32 AddRandomDirectionFromCone(FVector& DirectionToModify, float HorizontalAngle, float VerticalAngle, bool bAreRadiantAngles = true);
-
 public:
 	const FName GetMuzzleAttachPoint() const;
 
@@ -340,12 +290,6 @@ public:
 	* Set a new state and call the needed methods when switching states.
 	*/
 	void SetWeaponState(EWeaponState NewState);
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		float GetEquipDuration() const { return WeaponDatas.EquipDuration; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		float GetTimeBetweenShots() const { return TimeBetweenShots; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
 		bool IsWeaponEquipped() const { return bIsEquipped; }
@@ -366,27 +310,6 @@ public:
 		bool IsFiring() const { return CurrentState == EWeaponState::Firing; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		int32 GetMaxAmmunitionsReserve() const { return WeaponDatas.MaxAmmunitions; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		int32 GetCurrentAmmunitionsReserve() const { return AmmunitionsReserve; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		int32 GetClipSize() const { return WeaponDatas.AmmunitionsPerClip; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		int32 GetAmmunitionInClip() const { return AmmunitionsInClip; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		float GetCurrentSpread() const { return CurrentSpread; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		float GetMaxSpread() const { return WeaponDatas.MaxSpreadAngle; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		float GetRateOfFire() const { return WeaponDatas.RateOfFire; }
-
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
 		ATpsCharacterBase* GetParentCharacter() const { return ParentCharacter; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
@@ -399,7 +322,7 @@ public:
 		FVector GetShotWorldDirection() const;
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Getters")
-		EWeaponType GetWeaponType() const { return  WeaponDatas.WeaponType; }
+		EWeaponType GetWeaponType() const { return  WeaponType; }
 
 	/*
 	* Ask this weapon to start firing, if possible.
@@ -480,14 +403,4 @@ public:
 	* Consume one ammunition from the current clip. Use when shooting.
 	*/
 	void ConsumeAmmunition();
-
-	/*
-	* Increase the current spread after a bullet is shot.
-	*/
-	void IncreaseSpread();
-
-	/*
-	* Instantly reset the spread to 0.
-	*/
-	void ResetSpread();
 };

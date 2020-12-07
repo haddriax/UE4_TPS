@@ -8,12 +8,13 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "Characters/Components/IK_LegsComponent.h"
-#include "Characters/Components/WeaponHandlerComponent.h"
+// #include "Characters/Components/WeaponHandlerComponent.h"
+#include "Characters/Components/CharacterWeaponComponent.h"
 #include "Characters/Components/TpsCharacterMovementComponent.h"
-#include "Weapons/WeaponBase.h"
+// #include "Weapons/WeaponBase.h"
+#include "Weapons/ModularWeapon.h"
 
-
-AWeaponBase* ATpsCharacterBase::GetEquippedWeapon() const
+AModularWeapon* ATpsCharacterBase::GetEquippedWeapon() const
 {
 	return GetWeaponHandlerComponent()->GetEquippedWeapon();
 }
@@ -38,12 +39,14 @@ ATpsCharacterBase::ATpsCharacterBase(const FObjectInitializer& ObjectInitializer
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
-	WeaponHandlerComponent = CreateDefaultSubobject<UWeaponHandlerComponent>(TEXT("WeaponHandlerComponent"));
+	WeaponHandlerComponent = CreateDefaultSubobject<UCharacterWeaponComponent>(TEXT("WeaponHandlerComp"));
 
 	IK_LegsComponent = CreateDefaultSubobject<UIK_LegsComponent>(TEXT("IK_LegsComponent"));
 
 	WeaponAttachPointOnCharacter_Rifle = FName("middle_01_r_WeaponSocket");
 	HolsterWeaponAttachPointOnCharacter_Rifle = FName("RifleHolsterSocket");
+
+	bIsPlayer = false;
 }
 
 // Called when the game starts or when spawned
@@ -100,11 +103,11 @@ void ATpsCharacterBase::StopAnimMontage(UAnimMontage* AnimMontage)
 	}
 }
 
-void ATpsCharacterBase::OnHit(const AWeaponBase* HitInstigator)
+void ATpsCharacterBase::OnHit(const AModularWeapon* HitInstigator)
 {
 	check(HitInstigator);
 
-	Stats.Health -= HitInstigator->GetDamage();
+	// Stats.Health -= HitInstigator->GetDamage();
 
 	if (Stats.Health <= 0)
 	{
@@ -121,7 +124,7 @@ void ATpsCharacterBase::OnHit(const AWeaponBase* HitInstigator)
 
 void ATpsCharacterBase::StartFire()
 {
-	AWeaponBase* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
+	AModularWeapon* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
 
 	if (weapon 
 		&& GetTpsCharacterMovementComponent()->AllowFiring()
@@ -133,7 +136,7 @@ void ATpsCharacterBase::StartFire()
 
 void ATpsCharacterBase::StopFire()
 {
-	AWeaponBase* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
+	AModularWeapon* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
 
 	if (weapon)
 	{

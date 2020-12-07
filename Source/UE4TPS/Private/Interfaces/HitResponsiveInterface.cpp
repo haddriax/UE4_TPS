@@ -2,7 +2,7 @@
 
 #include "Interfaces/HitResponsiveInterface.h"
 
-void IHitResponsiveInterface::OnHit(const AWeaponBase* HitInstigator)
+void IHitResponsiveInterface::OnHit(const AModularWeapon* HitInstigator)
 {
 
 }
