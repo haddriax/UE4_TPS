@@ -137,7 +137,8 @@ struct FModularWeaponDatas
 
 /**
  * Base class for any usable weapon.
- * Fire behaviors are created by addung child classes of UWeaponFireModeComponent.
+ * Fire behaviors are created by adding child classes of UWeaponFireModeComponent.
+ * AModularWeapon can subscribe to it's UWeaponFireModeComponent events.
  */
 UCLASS(Abstract, BlueprintType)
 class UE4TPS_API AModularWeapon : public AActor
@@ -155,9 +156,6 @@ private:
 	ATpsCharacterBase* ParentCharacter = nullptr;
 
 protected:
-	// UPROPERTY(VisibleAnywhere, Category = "Weapon")
-		// UWeaponFeedbacksComponent* WeaponFeedbacksComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 		USkeletalMeshComponent* WeaponMesh;
 
@@ -187,10 +185,6 @@ protected:
 #pragma endregion Sockets
 
 	bool bIsEquipped = false;
-	bool bRefiring = false;
-
-	bool bIsPlayingFireAnimation = false;
-
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		EWeaponState CurrentState;

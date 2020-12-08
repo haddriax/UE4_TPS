@@ -7,6 +7,7 @@
 #include "WeaponFireModeComponent.generated.h"
 
 class AModularWeapon;
+class ABasicProjectile;
 
 UENUM(BlueprintType)
 enum class EStopFireReason : uint8
@@ -16,9 +17,11 @@ enum class EStopFireReason : uint8
 };
 
 /*
-* * Handle behavior for the weapon shooting.
+* Handle behavior for the weapon shooting.
+* Subscribe the FOnBurstStarted, FOnBurstEnded, FOnShotwith events (BP || Cpp) with the owning weapon to specify behaviors.
+* Animation/FX/Sound done with Blueprint code.
 */
-UCLASS(Abstract, BlueprintType, Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Abstract, BlueprintType, Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UE4TPS_API UWeaponFireModeComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -30,12 +33,29 @@ public:
 	DECLARE_MULTICAST_DELEGATE(FOnFireStart);
 	FOnFireStart OnFireStart;
 
-	DECLARE_MULTICAST_DELEGATE(FOnShot);
-	FOnShot OnShot;
-	 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBurstStarted);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBurstEnded);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShot);
+
+	UPROPERTY(BlueprintAssignable, Category = "FireModeEvents")
+		FOnBurstStarted OnBurstStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "FireModeEvents")
+		FOnBurstEnded OnBurstEnded;
+
+	UPROPERTY(BlueprintAssignable, Category = "FireModeEvents")
+		FOnShot OnShot;
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
 		AModularWeapon* Weapon;
+
+	/*
+	* If referenced, will spawn the projectile each time the fire shot.
+	* The projectile is instanced on the Muzzle socket from the weapon.
+	*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		TSubclassOf<ABasicProjectile> Projectile;
 
 	/*
 	* Game Time when the last bullet was fired. Used for the Fire timer.
@@ -49,7 +69,7 @@ protected:
 
 	bool bTryFire;
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UWeaponFireModeComponent();
 
@@ -99,9 +119,21 @@ protected:
 	* Blueprint code called in shot.
 	*/
 	UFUNCTION(BlueprintImplementableEvent)
-	void Shot_Blueprint();
+		void Shot_Blueprint();
 
-public:	
+	/*
+	 Blueprint code called in shot.
+	*/
+	UFUNCTION(BlueprintImplementableEvent)
+		void BurstStart_Blueprint();
+
+	/*
+	* Blueprint code called in shot.
+	*/
+	UFUNCTION(BlueprintImplementableEvent)
+		void BurstEnd_Blueprint();
+
+public:
 	/*
 	* Shoot with this FireMode.
 	* Called externally by the AWeaponBase owner.

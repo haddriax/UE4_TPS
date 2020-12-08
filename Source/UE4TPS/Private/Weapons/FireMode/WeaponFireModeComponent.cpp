@@ -4,6 +4,9 @@
 #include "Weapons/FireMode/WeaponFireModeComponent.h"
 
 #include "Weapons/ModularWeapon.h"
+#include "Weapons/Projectiles/BasicProjectile.h"
+
+#include "Characters/TpsCharacterBase.h"
 
 // Sets default values for this component's properties
 UWeaponFireModeComponent::UWeaponFireModeComponent()
@@ -17,6 +20,7 @@ UWeaponFireModeComponent::UWeaponFireModeComponent()
 	LastFireTime = 0.0f;
 	bTryFire = false;
 	BurstCounter = 0;
+	bSpawnProjectileOnShot = false;
 }
 
 
@@ -38,17 +42,35 @@ void UWeaponFireModeComponent::InitializeComponent()
 
 void UWeaponFireModeComponent::BurstStarted()
 {
-
+	BurstStart_Blueprint();
+	OnBurstStarted.Broadcast();
 }
 
 void UWeaponFireModeComponent::BurstEnded()
 {
 	BurstCounter = 0;
+	BurstEnd_Blueprint();
+	OnBurstEnded.Broadcast();
 }
 
 void UWeaponFireModeComponent::Shot()
 {
 	BurstCounter++;
+	OnShot.Broadcast();
+	
+	if (Projectile.Get())
+	{		
+		ABasicProjectile* ProjectileToSpawn = GetWorld()->SpawnActorDeferred<ABasicProjectile>(
+			Projectile.Get(),
+			FTransform::Identity,
+			Weapon,
+			CastChecked<APawn>(Weapon->GetParentCharacter()),
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+			);
+
+		ProjectileToSpawn->FinishSpawning(Weapon->GetMesh()->GetSocketTransform(Weapon->GetMuzzleFX_SocketName()));
+	}
+
 }
 
 void UWeaponFireModeComponent::ShotImpl()

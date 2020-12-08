@@ -57,7 +57,6 @@ void UAutoFireMode::Shot()
 
 	if (CanFire())
 	{
-
 		ShotImpl();
 
 		// Broadcast the OnShot Event.

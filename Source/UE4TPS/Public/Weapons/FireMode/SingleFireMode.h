@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Weapons/FireMode/WeaponFireModeComponent.h"
-#include "AutoFireMode.generated.h"
+#include "SingleFireMode.generated.h"
 
 /**
- * Shot at a given fire rate until EndFire is called or IsRefiring() become false.
+ * Shot one time per input, if possible.
  */
 UCLASS()
-class UE4TPS_API UAutoFireMode : public UWeaponFireModeComponent
+class UE4TPS_API USingleFireMode : public UWeaponFireModeComponent
 {
 	GENERATED_BODY()
 
@@ -25,7 +25,7 @@ protected:
 
 public:
 	// Sets default values for this component's properties
-	UAutoFireMode();
+	USingleFireMode();
 
 protected:
 	virtual void BeginPlay() override;
