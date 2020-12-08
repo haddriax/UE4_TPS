@@ -20,7 +20,6 @@ UWeaponFireModeComponent::UWeaponFireModeComponent()
 	LastFireTime = 0.0f;
 	bTryFire = false;
 	BurstCounter = 0;
-	bSpawnProjectileOnShot = false;
 }
 
 
