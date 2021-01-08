@@ -1,5 +1,5 @@
 # UE4_TPS
-Solo project, made for improving on UE4u.
+Solo project, made for improving on UE4.
 Only contains the C++ files.
 
 Some things I learned there :
