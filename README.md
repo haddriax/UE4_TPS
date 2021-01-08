@@ -24,11 +24,10 @@ Some things I learned there :
 	-> Using AnimInstance
   
  - C++ 
-	-> Object Oriented Programming
-	-> Templates
+ 	-> Unreal Macros
 	-> Working with Pointers/Reference/SoftReference/Copy
 	-> Timers
-	-> Class Default Object (learned its existence after a bug)
+	-> CDO - Class Default Object (learned its existence after a bug^^)
 	-> Delegates
 	-> Macro specifiers
 	-> UE Interfaces
