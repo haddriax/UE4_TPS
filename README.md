@@ -29,7 +29,6 @@ Some things I learned there :
 	-> Timers
 	-> CDO - Class Default Object (learned its existence after a bug^^)
 	-> Delegates
-	-> Macro specifiers
 	-> UE Interfaces
 	-> Exposing to Blueprint, game designer friendly
   
