@@ -9,15 +9,9 @@
 
 #include "ModularWeapon.generated.h"
 
-class UAnimMontage;
-class USoundCue;
-class UAudioComponent;
-class UParticleSystem;
-class UParticleSystemComponent;
 class USkeletalMeshComponent;
 class ATpsCharacterBase;
-
-class UWeaponFeedbacksComponent;
+class UAnimMontage;
 
 class UWeaponFireModeComponent;
 
@@ -30,90 +24,105 @@ struct FModularWeaponDatas
 	GENERATED_BODY();
 
 	/*
-	* Define then handling of the Weapon.
+	* Define the handling of the Weapon.
 	*/
 	UPROPERTY(EditDefaultsOnly)
-		EWeaponType WeaponType = EWeaponType::Undefined;
+	EWeaponType WeaponType = EWeaponType::Undefined;
 
 	/*
 	* Where the weapon will be located when holstered.
 	*/
 	UPROPERTY(EditDefaultsOnly)
-		EWeaponSlot WeaponSlot = EWeaponSlot::Undefined;
+	EWeaponSlot WeaponSlot = EWeaponSlot::Undefined;
 
 	/*
 	* Max ammunition in reserve for this weapon.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = Ammunitions)
-		int32 MaxAmmunitions;
+	int32 MaxAmmunitions;
 
 	/*
 	* Number of ammunitions available in one full clip.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = Ammunitions)
-		int32 AmmunitionsPerClip;
+	int32 AmmunitionsPerClip;
 
 	/*
 	* Number of clips available when this weapon is spawned.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = Ammunitions)
-		int32 InitialClips;
+	int32 InitialClips;
 
 	/*
 	* Damage dealt per bullet.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float Damage;
+	float Damage;
 
 	/*
 	* Bullets shots every second of holding fire.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float RateOfFire;
+	float RateOfFire;
 
 	/*
 	* The biggest angle in degrees a shot can be deviated due to accuracy loss.
 	* 0 mean accuracy is always perfect.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float MaxSpreadAngle;
+	float MaxSpreadAngle;
 
 	/*
 	* The smallest angle in degrees a shot can be deviated due to accuracy loss when the weapon is at it's perfect accuracy.
 	* Can not be bigger than MaxSpreadAngle.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float MinSpreadAngle;
+	float MinSpreadAngle;
 
 	/*
 	* Spread added every time is a bullet is fired
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float ShotForMaxSpread;
+	float ShotForMaxSpread;
 
 	/*
 	* TO IMPLEMENT.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float SpreadRecovery;
+	float SpreadRecovery;
 
 	/*
 	* Time needed to raise the weapon, disabling the weapon meanwhile.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float EquipDuration;
+	float EquipDuration;
 
 	/*
 	* Time needed for a full reload, disabling the weapon meanwhile.
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		float ReloadDuration;
+	float ReloadDuration;
 
 	/*
-	* Automtic fire or single shot.
+	* Reload Animation playable on the Character holding this weapon.
 	*/
-	UPROPERTY(EditDefaultsOnly, Category = WeaponStats)
-		uint8 bIsAutomaticWeapon;
+	UPROPERTY(EditDefaultsOnly, Category = WeaponAnimations)
+	UAnimMontage* AM_Reload;
+	/*
+	* Equip Animation playable on the Character holding this weapon.
+	*/
+	UPROPERTY(EditDefaultsOnly, Category = WeaponAnimations)
+	UAnimMontage* AM_Equip;
+	/*
+	* Unequip Animation playable on the Character holding this weapon.
+	*/
+	UPROPERTY(EditDefaultsOnly, Category = WeaponAnimations)
+	UAnimMontage* AM_Unequip;
+	/*
+	* Recoil Animation playable on the Character holding this weapon.
+	*/
+	UPROPERTY(EditDefaultsOnly, Category = WeaponAnimations)
+	UAnimMontage* AM_Recoil;
 
 	/*
 	* Defaults values.
@@ -131,9 +140,22 @@ struct FModularWeaponDatas
 		SpreadRecovery = 10.0f;
 		Damage = 10.0f;
 		RateOfFire = 5.0f;
-		bIsAutomaticWeapon = true;
 	}
 };
+
+/*
+* State of a weapon.
+*/
+UENUM(BlueprintType)
+enum class EWeaponState : uint8
+{
+	Idle,
+	Firing,
+	Reloading,
+	Equipping,
+	Unequipping
+};
+
 
 /**
  * Base class for any usable weapon.
@@ -192,6 +214,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		EWeaponType WeaponType = EWeaponType::Rifle;
 
+	/*
+	* Slot when weapon is holstered.
+	*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		EWeaponSlot WeaponSlot = EWeaponSlot::Rifle;
 
@@ -229,7 +254,7 @@ public:
 		FORCEINLINE EWeaponSlot GetWeaponSlot() const { return WeaponSlot; }
 
 	/*
-	*Return the type of slot this weapon is using to be holstered.
+	* @return : EWeaponState The actual state of the weapon.
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		FORCEINLINE EWeaponState GetWeaponState() const { return CurrentState; }
@@ -250,27 +275,30 @@ public:
 
 protected:
 	/*
-	* Attach the weapon to the owning player hand, and snap it to the weapon socket.
+	* Attach the weapon to the player hand, and snap it to the weapon socket.
+	* @param Character : The ATpsCharacterBase on which we want to attach the weapon.
 	*/
 	UFUNCTION()
 		void AttachToPawnHand(ATpsCharacterBase* Character);
 
 	/*
-	* Attach the weapon to the owning player dedicated holster slot.
+	* Attach the weapon to the player dedicated holster slot.
+	* @param Character : The ATpsCharacterBase on which we want to attach the weapon.
 	*/
 	void AttachToPawnHoslterSlot(ATpsCharacterBase* Character);
 
-	UFUNCTION()
 		/*
 		* Attach and snap this weapon to a socket.
-		* @param The USkeletalMeshComponent where we want to attach the weapon.
-		* @param The socket name where the weapon should snap.
+		* @param MeshToAttachOn : USkeletalMeshComponent where we want to attach the weapon.
+		* @param SocketName : Socket FName where the weapon should snap.
 		* @return True - The attachment was successful.
 		*/
+	UFUNCTION()
 		bool AttachToSocket(USkeletalMeshComponent* MeshToAttachOn, FName SocketName);
 
 	/*
-	* Detach the weapon from it's owner and hide it.
+	* Detach the weapon from it's owner.
+	* 
 	*/
 	UFUNCTION()
 		void DetachFromPawn();

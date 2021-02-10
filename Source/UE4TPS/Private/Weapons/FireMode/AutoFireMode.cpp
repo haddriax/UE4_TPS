@@ -57,14 +57,6 @@ void UAutoFireMode::Shot()
 
 	if (CanFire())
 	{
-		ShotImpl();
-
-		// Broadcast the OnShot Event.
-		if (OnShot.IsBound())
-		{
-			OnShot.Broadcast();
-		}
-
 		Shot_Blueprint();
 
 		if (IsRefiring())
@@ -92,7 +84,7 @@ void UAutoFireMode::Shot()
 
 bool UAutoFireMode::IsRefiring()
 {
-	return Super::IsRefiring();
+	return false;
 }
 
 bool UAutoFireMode::CanFire()

@@ -11,26 +11,30 @@
 
 UTpsCharacterMovementComponent::UTpsCharacterMovementComponent()
 {
-	WalkConfig.ForwardSpeed = 128.195f;
-	WalkConfig.BackwardSpeed = 103.015f;
-	WalkConfig.SideSpeed = 102.243f;
-	WalkConfig.Stance = ECharacterStance::Walk;
+	CharaMovementState.WalkConfig.ForwardSpeed = 128.195f;
+	CharaMovementState.WalkConfig.BackwardSpeed = 103.015f;
+	CharaMovementState.WalkConfig.SideSpeed = 102.243f;
+	CharaMovementState.WalkConfig.Stance = ECharacterStance::Walk;
 
-	JogConfig.ForwardSpeed = 346.000f;
-	JogConfig.BackwardSpeed = 248.388f;
-	JogConfig.SideSpeed = 310.637f;
-	JogConfig.Stance = ECharacterStance::Jog;
+	CharaMovementState.JogConfig.ForwardSpeed = 346.000f;
+	CharaMovementState.JogConfig.BackwardSpeed = 248.388f;
+	CharaMovementState.JogConfig.SideSpeed = 310.637f;
+	CharaMovementState.JogConfig.Stance = ECharacterStance::Jog;
 
-	RunConfig.ForwardSpeed = 630.450f;
-	RunConfig.BackwardSpeed = 346.000f;
-	RunConfig.SideSpeed = 346.000f;
-	RunConfig.Stance = ECharacterStance::Run;
+	CharaMovementState.RunConfig.ForwardSpeed = 630.450f;
+	CharaMovementState.RunConfig.BackwardSpeed = 346.000f;
+	CharaMovementState.RunConfig.SideSpeed = 346.000f;
+	CharaMovementState.RunConfig.Stance = ECharacterStance::Run;
 
-	ActiveConfig = &JogConfig;
+	CharaMovementState.SprintRecoveryTime = 0.20f;
+
+	ActiveConfig = &(CharaMovementState.JogConfig);
 
 	bOrientRotationToMovement = false;
 	bIgnoreBaseRotation = false;
 	bUseControllerDesiredRotation = true;
+
+	SprintLastTime = 0.0f;
 
 	RotationRate = FRotator(0, 300, 0);
 }
@@ -94,7 +98,7 @@ void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick T
 	const AController* Controller = CharacterOwner->GetController();
 	const FRotator ControlRotation = Controller->GetControlRotation();
 
-	// Apply the stored input vector to movement.
+	// Apply the stored input vector to X movement.
 	if ((Controller && (InputDirection.X != 0.0f)))
 	{
 		const FRotator YawRotation(0, ControlRotation.Yaw, 0);
@@ -104,6 +108,7 @@ void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick T
 		AddInputVector(WorldDirection * InputDirection.X, false);
 	}
 
+	// Apply the stored input vector to Y movement.
 	if ((Controller && (InputDirection.Y != 0.0f)))
 	{
 		const FRotator YawRotation(0, ControlRotation.Yaw, 0);
@@ -114,8 +119,8 @@ void UTpsCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick T
 	}
 
 	// Stored to ensure we override the base CharacterMovement Rotation.
-	const FRotator ActorRotation = GetOwner()->GetActorRotation();
-
+	// const FRotator ActorRotation = GetOwner()->GetActorRotation();
+	
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	/*
@@ -141,6 +146,17 @@ void UTpsCharacterMovementComponent::MoveRight(float InputValue)
 	InputDirection.Y = InputValue;
 }
 
+bool UTpsCharacterMovementComponent::CanRun()
+{
+	const UWorld* World = GetWorld();
+	if (World)
+	{
+		return ((SprintLastTime + CharaMovementState.SprintRecoveryTime) <= (World->TimeSeconds));
+	}
+	
+	return false;
+}
+
 ECharacterStance UTpsCharacterMovementComponent::LoadMovementConfigs(ECharacterStance NewMovementConfig)
 {
 	const ECharacterStance OldStance = ActiveConfig->Stance;
@@ -148,17 +164,17 @@ ECharacterStance UTpsCharacterMovementComponent::LoadMovementConfigs(ECharacterS
 	switch (NewMovementConfig)
 	{
 	case ECharacterStance::Crouch:
-		ActiveConfig = &CrouchConfig;
+		ActiveConfig = &(CharaMovementState.CrouchConfig);
 		unimplemented();
 		break;
 	case ECharacterStance::Walk:
-		ActiveConfig = &WalkConfig;
+		ActiveConfig = &(CharaMovementState.WalkConfig);
 		break;
 	case ECharacterStance::Jog:
-		ActiveConfig = &JogConfig;
+		ActiveConfig = &(CharaMovementState.JogConfig);
 		break;
 	case ECharacterStance::Run:
-		ActiveConfig = &RunConfig;
+		ActiveConfig = &(CharaMovementState.RunConfig);
 		break;
 	case ECharacterStance::None:
 		return ECharacterStance::None;
@@ -174,6 +190,26 @@ ECharacterStance UTpsCharacterMovementComponent::LoadMovementConfigs(ECharacterS
 	return OldStance;
 }
 
+void UTpsCharacterMovementComponent::StartJump()
+{
+	if (TpsCharacter)
+	{
+		TpsCharacter->Jump();
+	}
+}
+
+void UTpsCharacterMovementComponent::StopJump()
+{
+	if (TpsCharacter)
+	{
+		TpsCharacter->StopJumping();
+	}
+}
+
+void UTpsCharacterMovementComponent::EndJump()
+{
+}
+
 void UTpsCharacterMovementComponent::EnableTravelMode()
 {
 	MovementType = ECharacterGlobalMovementMode::Travel;	
@@ -186,22 +222,38 @@ void UTpsCharacterMovementComponent::EnableCombatMode()
 
 void UTpsCharacterMovementComponent::EnableSprint()
 {
-	LoadMovementConfigs(ECharacterStance::Run);
-
-	if (OnSprintStart.IsBound())
+	if (CanRun())
 	{
-		OnSprintStart.Broadcast();
+		LoadMovementConfigs(ECharacterStance::Run);
+
+		if (OnSprintStart.IsBound())
+		{
+			OnSprintStart.Broadcast();
+		}
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Red, (FString(__FUNCTION__) + FString(" : Sprint CD")));
 	}
 }
 
 void UTpsCharacterMovementComponent::DisableSprint()
-{
-	LoadMovementConfigs(ECharacterStance::Jog);
-
-	if (OnSprintStop.IsBound())
+{	
+	if (IsRunStance())
 	{
-		OnSprintStop.Broadcast();
-	}
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			SprintLastTime = World->TimeSeconds;
+		}
+
+		LoadMovementConfigs(ECharacterStance::Jog);
+	
+		if (OnSprintStop.IsBound())
+		{
+			OnSprintStop.Broadcast();
+		}
+	}	
 }
 
 void UTpsCharacterMovementComponent::EnableWalk()

@@ -154,13 +154,16 @@ void UCharacterWeaponComponent::BeginPlay()
 
 void UCharacterWeaponComponent::LoadAnimationMontages()
 {
-	FireSingleWeaponSoftPtr.LoadSynchronous();
-	FireContinuousWeaponSoftPtr.LoadSynchronous();
-	ReloadWeaponSoftPtr.LoadSynchronous();
+
 	EquipWeaponSoftPtr.LoadSynchronous();
 	UnequipWeaponSoftPtr.LoadSynchronous();
 
 	/*
+	FireSingleWeaponSoftPtr.LoadSynchronous();
+	FireContinuousWeaponSoftPtr.LoadSynchronous();
+	ReloadWeaponSoftPtr.LoadSynchronous();
+
+	
 	FireSingleWeaponAM->AddSlot("UpperBody");
 	FireContinuousWeaponAM->AddSlot("UpperBody");
 	ReloadWeaponAM->AddSlot("UpperBody");
@@ -171,20 +174,22 @@ void UCharacterWeaponComponent::LoadAnimationMontages()
 	RecoverMontageNotifications();
 }
 
+
 void UCharacterWeaponComponent::PlayShotMontageSingle()
 {
-	CharacterOwner->PlayAnimMontage(FireSingleWeaponSoftPtr.Get());
+	// CharacterOwner->PlayAnimMontage(FireSingleWeaponSoftPtr.Get());
 }
 
 void UCharacterWeaponComponent::TogglePlayShotMontageLoop()
 {
+
 	if (bIsPlayingContinuousFireMontage)
 	{
-		CharacterOwner->StopAnimMontage(FireContinuousWeaponSoftPtr.Get());
+		// CharacterOwner->StopAnimMontage(FireContinuousWeaponSoftPtr.Get());
 	}
 	else
 	{
-		CharacterOwner->PlayAnimMontage(FireContinuousWeaponSoftPtr.Get());
+		// CharacterOwner->PlayAnimMontage(FireContinuousWeaponSoftPtr.Get());
 	}
 	
 	bIsPlayingContinuousFireMontage = !bIsPlayingContinuousFireMontage;
@@ -490,6 +495,8 @@ void UCharacterWeaponComponent::Reload()
 
 			// Reload based on the anim duration.
 			EquippedWeapon->Reload(AnimDuration);
+			
+			OnReload.Broadcast(EquippedWeapon);
 
 			// Start timer for ReloadFinisehd.
 			GetOwner()->GetWorldTimerManager().SetTimer(
@@ -506,6 +513,8 @@ void UCharacterWeaponComponent::Reload()
 void UCharacterWeaponComponent::ReloadFinished()
 {
 	SetState(EWeaponHoldingState::PrimaryIdle);
+
+	OnReloadFinished.Broadcast(EquippedWeapon);
 
 	bUseHandIK = true;
 }

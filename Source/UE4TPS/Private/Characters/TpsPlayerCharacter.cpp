@@ -188,8 +188,10 @@ void ATpsPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 	check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	// PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	// PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, TpsCharacterMovementComponent, &UTpsCharacterMovementComponent::StartJump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, TpsCharacterMovementComponent, &UTpsCharacterMovementComponent::StopJump);
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, TpsCharacterMovementComponent, &UTpsCharacterMovementComponent::EnableSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, TpsCharacterMovementComponent, &UTpsCharacterMovementComponent::DisableSprint);

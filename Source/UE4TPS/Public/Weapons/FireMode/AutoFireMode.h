@@ -31,12 +31,23 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void InitializeComponent() override;
 
+	/*
+	* When started shooting.
+	*/
 	virtual void BurstStarted() override;
+	/*
+	* When finished shooting.
+	*/
 	virtual void BurstEnded() override;
 	virtual void Shot() override;
 
-	virtual bool IsRefiring() override;
+	virtual bool IsRefiring();
 	virtual bool CanFire() override;
 
-public:
+	/*
+	* Blueprint shooting is called after all the frame shot logic.
+	*/
+	UFUNCTION(BlueprintImplementableEvent)
+	void Shot_Blueprint();
+
 };

@@ -153,6 +153,7 @@ public:
 	void OnHit(const AModularWeapon* HitInstigator) override;
 	/* End HitResponsive Interface */
 
+
 	UFUNCTION(BlueprintCallable)
 		void StartFire();
 	UFUNCTION(BlueprintCallable)

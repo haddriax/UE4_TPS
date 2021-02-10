@@ -160,7 +160,7 @@ FVector AModularWeapon::GetMuzzleWorldLocation() const
 
 FVector AModularWeapon::GetShotWorldDirection() const
 {
-	return GetMesh()->GetSocketLocation(GetShotDirectionSocketName()) - GetMesh()->GetSocketLocation(GetMuzzleAttachPoint());
+	return (GetMesh()->GetSocketLocation(GetShotDirectionSocketName()) - (GetMesh()->GetSocketLocation(GetMuzzleAttachPoint())));
 }
 
 void AModularWeapon::TryShooting()

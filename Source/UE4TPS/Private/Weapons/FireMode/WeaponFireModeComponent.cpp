@@ -5,6 +5,7 @@
 
 #include "Weapons/ModularWeapon.h"
 #include "Weapons/Projectiles/BasicProjectile.h"
+#include "Components/SphereComponent.h"
 
 #include "Characters/TpsCharacterBase.h"
 
@@ -41,14 +42,12 @@ void UWeaponFireModeComponent::InitializeComponent()
 
 void UWeaponFireModeComponent::BurstStarted()
 {
-	BurstStart_Blueprint();
 	OnBurstStarted.Broadcast();
 }
 
 void UWeaponFireModeComponent::BurstEnded()
 {
 	BurstCounter = 0;
-	BurstEnd_Blueprint();
 	OnBurstEnded.Broadcast();
 }
 
@@ -58,22 +57,21 @@ void UWeaponFireModeComponent::Shot()
 	OnShot.Broadcast();
 	
 	if (Projectile.Get())
-	{		
-		ABasicProjectile* ProjectileToSpawn = GetWorld()->SpawnActorDeferred<ABasicProjectile>(
+	{
+		FActorSpawnParameters asp;
+		asp.Instigator = CastChecked<APawn>(Weapon->GetParentCharacter());
+		asp.Owner = Weapon;
+		asp.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		ABasicProjectile* SpawnedProjectile = GetWorld()->SpawnActor<ABasicProjectile>(
 			Projectile.Get(),
-			FTransform::Identity,
-			Weapon,
-			CastChecked<APawn>(Weapon->GetParentCharacter()),
-			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+			Weapon->GetMesh()->GetSocketTransform(Weapon->GetMuzzleFX_SocketName(), ERelativeTransformSpace::RTS_World),
+			asp
 			);
 
-		ProjectileToSpawn->FinishSpawning(Weapon->GetMesh()->GetSocketTransform(Weapon->GetMuzzleFX_SocketName()));
+		SpawnedProjectile->GetSphereCollision()->IgnoreActorWhenMoving(Weapon, true);
+		SpawnedProjectile->GetSphereCollision()->IgnoreActorWhenMoving(Weapon->GetParentActor(), true);
 	}
-
-}
-
-void UWeaponFireModeComponent::ShotImpl()
-{
 }
 
 bool UWeaponFireModeComponent::IsRefiring()

@@ -35,7 +35,6 @@ protected:
 	virtual void BurstEnded() override;
 	virtual void Shot() override;
 
-	virtual bool IsRefiring() override;
 	virtual bool CanFire() override;
 
 public:

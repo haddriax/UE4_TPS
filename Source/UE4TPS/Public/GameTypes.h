@@ -50,27 +50,6 @@ enum class EWeaponType : uint8
 	Knife			UMETA(DisplayName = "Knife")
 };
 
-/*
-* State of a weapon.
-*/
-UENUM(BlueprintType)
-enum class EWeaponState : uint8
-{
-	Idle,
-	Firing,
-	Reloading,
-	Equipping,
-	Unequipping
-};
-
-namespace EWeaponFireType
-{
-	enum Type
-	{
-		Hitscan,
-		Projectile
-	};
-}
 
 /*
 * Slot taking by this weapon in inventory.
@@ -85,16 +64,4 @@ enum class EWeaponSlot : uint8
 	Undefined UMETA(DisplayName = "Undefined"),
 };
 
-/*
-* WeaponHolding state.
-*/
-UENUM(BlueprintType)
-enum class EWeaponHoldingState : uint8
-{
-	NoWeapon,
-	PrimaryIdle,
-	EquippingPrimary,
-	UnequippingPrimary,
-	ReloadingPrimary,
-	Undefined
-};
+

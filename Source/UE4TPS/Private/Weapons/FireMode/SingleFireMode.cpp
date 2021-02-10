@@ -48,18 +48,10 @@ void USingleFireMode::Shot()
 {
 	Super::Shot();
 
-	ShotImpl();
-
-	Shot_Blueprint();
-
 	// Keep the last fire time, so we know if we can shot again at a given frame.
 	LastFireTime = GetWorld()->GetTimeSeconds();
 }
 
-bool USingleFireMode::IsRefiring()
-{
-	return false;
-}
 
 bool USingleFireMode::CanFire()
 {

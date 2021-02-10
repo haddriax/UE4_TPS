@@ -97,13 +97,6 @@ protected:
 	virtual void Shot();
 
 	/*
-	* What the shot actually do in game world.
-	* Must be overriden.
-	*/
-	virtual void ShotImpl();
-
-
-	/*
 	* True - Weapon will refire, i.e. refire timer is active.
 	* False - Burst will be ended after the shot.
 	*/
@@ -114,24 +107,6 @@ protected:
 	* False - Shot will be canceled.
 	*/
 	virtual bool CanFire();
-
-	/*
-	* Blueprint code called in shot.
-	*/
-	UFUNCTION(BlueprintImplementableEvent)
-		void Shot_Blueprint();
-
-	/*
-	 Blueprint code called in shot.
-	*/
-	UFUNCTION(BlueprintImplementableEvent)
-		void BurstStart_Blueprint();
-
-	/*
-	* Blueprint code called in shot.
-	*/
-	UFUNCTION(BlueprintImplementableEvent)
-		void BurstEnd_Blueprint();
 
 public:
 	/*

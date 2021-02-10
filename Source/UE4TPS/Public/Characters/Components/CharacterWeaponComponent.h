@@ -13,6 +13,26 @@ class AModularWeapon;
 class ATpsCharacterBase;
 class UAnimMontage;
 
+/*
+* WeaponHolding state.
+*/
+UENUM(BlueprintType)
+enum class EWeaponHoldingState : uint8
+{
+	NoWeapon,
+	PrimaryIdle,
+	EquippingPrimary,
+	UnequippingPrimary,
+	ReloadingPrimary,
+	Undefined
+};
+
+
+/*
+* Usable on any childclass of ATpsCharacterBase.
+* Allow storage and weapon usage.
+* Actions : Equip & Unequip / Reload / Fire
+*/
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UE4TPS_API UCharacterWeaponComponent : public UActorComponent
 {
@@ -39,14 +59,17 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnUnequipFinished OnUnequipWeaponFinished;
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReload, AModularWeapon*, Weapon);
+
+	UPROPERTY(BlueprintAssignable)
+		FOnReload OnReload;
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReloadFinished, AModularWeapon*, Weapon);
+
+	UPROPERTY(BlueprintAssignable)
+		FOnReloadFinished OnReloadFinished;
+
 protected:
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
-		TSoftObjectPtr<UAnimMontage> FireSingleWeaponSoftPtr = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
-		TSoftObjectPtr<UAnimMontage> FireContinuousWeaponSoftPtr = nullptr;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 		TSoftObjectPtr<UAnimMontage> ReloadWeaponSoftPtr = nullptr;
 
@@ -120,7 +143,7 @@ protected:
 	FTimerHandle TimerHandle_WeaponAction;
 
 	bool bUseHandIK = false;
-	
+
 	uint8 bIsPlayingContinuousFireMontage = false;
 
 public:
@@ -219,9 +242,11 @@ protected:
 	bool EquipWeapon(AModularWeapon* WeaponToEquip);
 
 
-	void AttachToPawnHand(AModularWeapon* Weapon);
+	UFUNCTION(BlueprintCallable)
+		void AttachToPawnHand(AModularWeapon* Weapon);
 
-	void AttachToPawnHoslterSlot(AModularWeapon* Weapon);
+	UFUNCTION(BlueprintCallable)
+		void AttachToPawnHoslterSlot(AModularWeapon* Weapon);
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)

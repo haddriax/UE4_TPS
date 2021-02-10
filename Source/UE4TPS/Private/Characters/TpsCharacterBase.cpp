@@ -121,7 +121,6 @@ void ATpsCharacterBase::OnHit(const AModularWeapon* HitInstigator)
 	UE_LOG(LogTemp, Display, TEXT("V %s - Got hit by %s"), TEXT(__FUNCTION__), *HitInstigator->GetHumanReadableName());
 }
 
-
 void ATpsCharacterBase::StartFire()
 {
 	AModularWeapon* weapon = GetWeaponHandlerComponent()->GetEquippedWeapon();
