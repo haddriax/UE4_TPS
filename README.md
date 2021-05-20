@@ -2,6 +2,8 @@
 Solo project, made for improving on UE4.
 Only contains the C++ files.
 
+- This is an unfinished project, mostly made to improve my UE4 skills. I still might update it though. 
+
 Some things I learned there :
 
 - Animation
